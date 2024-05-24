@@ -10,5 +10,11 @@ GET     /report                     controllers.StoreController.report()
 
 GET     /persons              controllers.PersonController.index
 POST    /persons              controllers.PersonController.addPerson
+
+GET     /people                controllers.PeopleController.getPeople
+GET     /people/:sno           controllers.PeopleController.getPerson(sno: Int)
+POST    /people                controllers.PeopleController.createPerson
+PUT     /people/:sno           controllers.PeopleController.updatePerson(sno: Int)
+DELETE  /people/:sno           controllers.PeopleController.deletePerson(sno: Int)
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
