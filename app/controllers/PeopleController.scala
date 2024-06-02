@@ -55,7 +55,7 @@ class PeopleController @Inject()(personRepository: PersonRepository, cc: Control
   }
 
   def callExternalApi(person: Person): Future[String] = {
-    val url = "http://34.16.203.41:8888/write-message"
+    val url = "http://34.16.199.130:8888/write-message"
     val jsonData = Json.obj(
       "sno" -> person.sno,
       "name" -> person.name,
