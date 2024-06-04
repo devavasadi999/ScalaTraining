@@ -3,6 +3,7 @@ package controllers
 
 import javax.inject._
 import models.{Person, PersonRepository}
+import org.slf4j.LoggerFactory
 import play.api.libs.json._
 import play.api.libs.ws.WSClient
 import play.api.mvc._
@@ -13,6 +14,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class PeopleController @Inject()(personRepository: PersonRepository, cc: ControllerComponents,ws: WSClient)(implicit ec: ExecutionContext) extends AbstractController(cc) {
   implicit val personFormat: Format[Person] = Json.format[Person]
 
+  private val logger = LoggerFactory.getLogger(getClass)
   def getPeople = Action.async {
     personRepository.list().map { people =>
       Ok(Json.toJson(people))
@@ -62,6 +64,7 @@ class PeopleController @Inject()(personRepository: PersonRepository, cc: Control
       "city" -> person.city
     )
     println(s"Sending request to $url with payload $jsonData")
+    logger.info("Handling a request to the home page.")
     println(s"this is working: api being called")
     ws.url(url)
       .addHttpHeaders("Content-Type" -> "application/json")
