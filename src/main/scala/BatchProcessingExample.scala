@@ -42,7 +42,7 @@ object BatchProcessingExample {
     detailedSalesReport.show()
 
     // Write the result to JSON
-    detailedSalesReport.write
-      .json("/Users/vinodh/datasets/outputjson")
+  /*  detailedSalesReport.write
+      .json("/Users/vinodh/datasets/outputjson")*/
   }
 }
