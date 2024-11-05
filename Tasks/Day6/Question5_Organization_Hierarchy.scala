@@ -2,17 +2,26 @@ import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.Queue
 import scala.io.StdIn.readLine
 
+// Define employee case class
+case class Employee (
+    serialNo: Int, 
+    name: String,
+    city: String
+) {
+    override def toString: String = s"($serialNo, $name, $city)"
+}
+
 // Define the TreeNode case class
 case class TreeNode (
     departmentName: String,
-    employees: ListBuffer[(Int, String, String)] = ListBuffer(),
+    employees: ListBuffer[Employee] = ListBuffer(),
     children: ListBuffer[TreeNode] = ListBuffer()
 )
 
 class TreeOps {
     val rootNode: TreeNode = TreeNode("Organization")
 
-    def addNode(parentDeptName: String, currentDeptName: String, employees: List[(Int, String, String)] = List.empty): String = {
+    def addNode(parentDeptName: String, currentDeptName: String, employees: List[Employee] = List.empty): String = {
         try {
             val currentDepartmentNode: TreeNode = addCurrentDepartment(parentDeptName, currentDeptName)
 
@@ -124,10 +133,10 @@ def startInteraction(): Unit = {
     }
 }
 
-def collectDepartmentDetails(): (String, String, List[(Int, String, String)]) = {
+def collectDepartmentDetails(): (String, String, List[Employee]) = {
     val parentDeptName = readLine("Enter parent department name: ").trim
     val currentDeptName = readLine("Enter current department name: ").trim
-    val employees: ListBuffer[(Int, String, String)] = ListBuffer()
+    val employees: ListBuffer[Employee] = ListBuffer()
 
     var continueLooping: Boolean = true
     while(continueLooping) {
@@ -138,7 +147,7 @@ def collectDepartmentDetails(): (String, String, List[(Int, String, String)]) = 
                 val sNum: Int = readLine("Enter Serial Number: ").trim.toInt
                 val empName: String = readLine("Enter Name of Employee: ").trim
                 val empCity: String = readLine("Enter city of Employee: ").trim
-                employees += ((sNum, empName, empCity))
+                employees += Employee(sNum, empName, empCity)
             case "2" =>
                 continueLooping = false
             case _ =>
