@@ -1,9 +1,7 @@
-import scala.util.{Random, Try}
+import scala.util.{Random, Try, Success, Failure}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future, Promise}
-import scala.util.Success
-import scala.util.Failure
 
 def RandomNumberThreadExecutor(): Future[String] = {
     // Create a promise
@@ -19,7 +17,7 @@ def RandomNumberThreadExecutor(): Future[String] = {
                 if(randomNumber == 1567) {
                     // try complete the promise to make sure if it is already completed, won't be doing it again
                     // it also signals other threads to stop because all threads are checking for status of promise continuously
-                    promise.tryComplete(Try(s"${Thread.currentThread().getName} has generated 1567"))
+                    promise.trySuccess(s"${Thread.currentThread().getName} has generated 1567")
                 }
             }
         }
@@ -46,5 +44,9 @@ def RandomNumberThreadExecutor(): Future[String] = {
     val future: Future[String] = RandomNumberThreadExecutor()
 
     // print the result after the future gets completed
-    println(Await.result(future, Duration.Inf))
+    try{
+        println(Await.result(future, Duration.Inf))
+    } catch {
+        case ex: Throwable => println(s"Await failed with exceptin: ${ex.getMessage}")
+    }
 }
