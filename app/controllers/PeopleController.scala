@@ -32,10 +32,10 @@ class PeopleController @Inject()(personRepository: PersonRepository, cc: Control
     request.body.validate[Person].fold(
       errors => Future.successful(BadRequest("Invalid JSON provided")),
       person => {
-        personRepository.add(person).flatMap { _ =>
+        personRepository.add(person)/*.flatMap { _ =>
           callExternalApi(person)
-        }.map { apiResponse =>
-          Created(Json.toJson(person)).withHeaders("API-Response" -> apiResponse)
+        }*/.map { /*apiResponse*/_ =>
+          Created(Json.toJson(person))//.withHeaders("API-Response" -> apiResponse)
         }.recover {
           case e: Exception => InternalServerError("Failed to call external API")
         }
