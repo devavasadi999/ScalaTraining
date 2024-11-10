@@ -18,6 +18,8 @@ libraryDependencies ++= Seq(
 )
 libraryDependencies += ws
 
+libraryDependencies += "org.postgresql" % "postgresql" % "42.2.23"
+
 
 
 
