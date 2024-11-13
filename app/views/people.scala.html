@@ -1,0 +1,21 @@
+@(persons: Seq[Person])
+
+@main("All Persons") {
+    <ul>
+    @for(person <- persons) {
+        <li>@person.name - @person.city</li>
+    }
+    </ul>
+}
+<h2>Add a new person</h2>
+<form action="persons" method="post">
+    <label for="name">Sno:</label>
+    <input type="text" id="Sno" name="sno" required><br><br>
+    <label for="name">Name:</label>
+    <input type="text" id="name" name="name" required><br><br>
+
+    <label for="city">City:</label>
+    <input type="text" id="city" name="city" required><br><br>
+
+    <input type="submit" value="Add Person">
+</form>

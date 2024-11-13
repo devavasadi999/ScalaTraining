@@ -1,0 +1,43 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# https://www.playframework.com/documentation/latest/ScalaRouting
+# ~~~~
+
+# An example controller showing a sample home page
+GET     /                           controllers.HomeController.index()
+GET     /store                      controllers.StoreController.index()
+GET     /report                     controllers.StoreController.report()
+
+GET     /persons              controllers.PersonController.index
+POST    /persons              controllers.PersonController.addPerson
+
+GET     /people                controllers.PeopleController.getPeople
+GET     /people/:sno           controllers.PeopleController.getPerson(sno: Int)
+POST    /people                controllers.PeopleController.createPerson
+PUT     /people/:sno           controllers.PeopleController.updatePerson(sno: Int)
+DELETE  /people/:sno           controllers.PeopleController.deletePerson(sno: Int)
+# Map static resources from the /public folder to the /assets URL path
+GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
+
+# EventPlan APIs
+POST    /eventPlans                     controllers.EventPlanController.createEventPlan
+GET     /eventPlans                     controllers.EventPlanController.listEventPlans
+GET     /eventPlans/:id                 controllers.EventPlanController.getEventPlan(id: Long)
+
+# TaskTemplate APIs
+POST    /taskTemplates                  controllers.EventPlanController.addTaskTemplate
+GET     /taskTemplates/serviceTeam/:serviceTeamId  controllers.EventPlanController.getTaskTemplates(serviceTeamId: Long)
+
+# ServiceTeam APIs
+POST    /serviceTeams                   controllers.EventPlanController.addServiceTeam
+GET     /serviceTeams                   controllers.EventPlanController.listServiceTeams
+
+# TaskAssignment APIs
+POST    /taskAssignments                controllers.EventPlanController.addTaskAssignment
+GET     /taskAssignments/eventPlan/:eventPlanId  controllers.EventPlanController.getTaskAssignments(eventPlanId: Long)
+PATCH   /taskAssignments/:taskAssignmentId       controllers.EventPlanController.updateTaskAssignment(taskAssignmentId: Long)
+
+# TaskIssue APIs
+POST    /taskIssues                     controllers.EventPlanController.addTaskIssue
+PATCH   /taskIssues/:taskIssueId            controllers.EventPlanController.updateTaskIssueStatus(taskIssueId: Long)
+GET     /taskIssues                     controllers.EventPlanController.listTaskIssues
