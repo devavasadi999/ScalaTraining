@@ -29,4 +29,8 @@ class ServiceTeamRepository @Inject()(dbConfigProvider: DatabaseConfigProvider)(
   def update(serviceTeam: ServiceTeam): Future[Int] = db.run(serviceTeams.filter(_.id === serviceTeam.id).update(serviceTeam))
 
   def delete(id: Long): Future[Int] = db.run(serviceTeams.filter(_.id === id).delete)
+
+  def findEmailById(serviceTeamId: Long): Future[Option[String]] = {
+    db.run(serviceTeams.filter(_.id === serviceTeamId).map(_.email).result.headOption)
+  }
 }

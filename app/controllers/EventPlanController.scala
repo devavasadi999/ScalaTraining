@@ -4,6 +4,8 @@ import javax.inject._
 import models._
 import play.api.libs.json._
 import play.api.mvc._
+import services.KafkaProducerService
+
 import scala.concurrent.{ExecutionContext, Future}
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -15,7 +17,8 @@ class EventPlanController @Inject()(
                                      serviceTeamRepository: ServiceTeamRepository,
                                      taskAssignmentRepository: TaskAssignmentRepository,
                                      taskIssueRepository: TaskIssueRepository,
-                                     cc: ControllerComponents
+                                     cc: ControllerComponents,
+                                     kafkaProducer: KafkaProducerService,
                                    )(implicit ec: ExecutionContext) extends AbstractController(cc) {
 
   implicit val eventPlanFormat: Format[EventPlan] = Json.format[EventPlan]
@@ -79,39 +82,69 @@ class EventPlanController @Inject()(
 
   // 4) Add Task Assignment - POST
   def addTaskAssignment = Action.async(parse.json) { request =>
-    val eventPlanIdOpt = (request.body \ "eventPlanId").asOpt[Long]
-    val taskTemplateIdOpt = (request.body \ "taskTemplateId").asOpt[Long]
-    val serviceTeamIdOpt = (request.body \ "serviceTeamId").asOpt[Long]
-    val startTimeOpt = (request.body \ "startTime").asOpt[String].map(LocalDateTime.parse(_, dateTimeFormatter))
-    val endTimeOpt = (request.body \ "endTime").asOpt[String].map(LocalDateTime.parse(_, dateTimeFormatter))
-    val specialRequirements = (request.body \ "specialRequirements").asOpt[String]
-    val expectations = (request.body \ "expectations").asOpt[String]
-    val statusOpt = (request.body \ "status").asOpt[AssignmentStatus.AssignmentStatus]
+    request.body.validate[TaskAssignment].fold(
+      errors => {
+        println(errors)
+        Future.successful(BadRequest("Invalid JSON provided"))
+      },
+      taskAssignment => {
+        // Retrieve the email for the service team based on serviceTeamId
+        serviceTeamRepository.findEmailById(taskAssignment.serviceTeamId).flatMap {
+          case Some(email) =>
+            // Add task assignment to the repository
+            taskAssignmentRepository.add(taskAssignment).map { createdAssignment =>
+              // Define your different message types
+              val notificationTypes = Seq(
+                "TaskAssignmentNotification",
+                "PreparationReminders",
+                "ProgressCheckIn",
+                "EventDayAlert"
+              )
 
-    (eventPlanIdOpt, taskTemplateIdOpt, serviceTeamIdOpt, startTimeOpt, endTimeOpt, statusOpt) match {
-      case (Some(eventPlanId), Some(taskTemplateId), Some(serviceTeamId), Some(startTime), Some(endTime), Some(status)) =>
-        taskAssignmentRepository.add(TaskAssignment(0, eventPlanId, taskTemplateId, serviceTeamId, startTime, endTime, specialRequirements, expectations, status)).map { createdTaskAssignment =>
-          Created(Json.toJson(createdTaskAssignment))
+              // Create the base message object
+              var message = Json.obj(
+                "messageType" -> "",  // Placeholder for message type
+                "toEmails" -> Json.arr(email),
+                "taskAssignment" -> Json.toJson(createdAssignment),
+                "taskIssue" -> JsNull
+              )
+
+              // Iterate over each notification type and modify `messageType` before sending
+              notificationTypes.foreach { notificationType =>
+                // Update the `messageType` field
+                message = message.as[JsObject] + ("messageType" -> Json.toJson(notificationType))
+
+                // Send the modified message to Kafka
+                kafkaProducer.send("rawNotification", message.toString)
+              }
+
+              Created(Json.toJson(createdAssignment))
+            }
+          case None =>
+            // If the service team email is not found, return an error response
+            Future.successful(BadRequest("Service team email not found"))
         }
-      case _ =>
-        Future.successful(BadRequest("Invalid JSON format or missing fields"))
-    }
+      }
+    )
   }
 
   // 5) Add Task Issue - POST
   def addTaskIssue = Action.async(parse.json) { request =>
-    val taskAssignmentIdOpt = (request.body \ "taskAssignmentId").asOpt[Long]
-    val problemOpt = (request.body \ "problem").asOpt[String]
-    val statusOpt = (request.body \ "status").asOpt[IssueStatus.IssueStatus]
-
-    (taskAssignmentIdOpt, problemOpt, statusOpt) match {
-      case (Some(taskAssignmentId), Some(problem), Some(status)) =>
-        taskIssueRepository.add(TaskIssue(0, taskAssignmentId, problem, status)).map { createdTaskIssue =>
-          Created(Json.toJson(createdTaskIssue))
+    request.body.validate[TaskIssue].fold(
+      errors => Future.successful(BadRequest("Invalid JSON provided")),
+      taskIssue => {
+        taskIssueRepository.add(taskIssue).map { createdIssue =>
+          val message = Json.obj(
+            "messageType" -> "IssueAlert",
+            "toEmails" -> Json.arr("event.manager@example.com"),
+            "taskAssignment" -> JsNull,
+            "taskIssue" -> Json.toJson(createdIssue)
+          )
+          kafkaProducer.send("rawNotification", message.toString)
+          Created(Json.toJson(createdIssue))
         }
-      case _ =>
-        Future.successful(BadRequest("Invalid JSON format or missing fields"))
-    }
+      }
+    )
   }
 
   // 6) View All Event Plans - GET

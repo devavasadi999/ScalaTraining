@@ -13,19 +13,12 @@ libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.30"
 libraryDependencies ++= Seq(
   "org.playframework" %% "play-slick"            % "6.1.0",
   "org.playframework" %% "play-slick-evolutions" % "6.1.0",
-  "mysql" % "mysql-connector-java" % "8.0.26"
-
+  "mysql" % "mysql-connector-java" % "8.0.26",
+  "org.postgresql" % "postgresql" % "42.2.23",
+  "org.apache.kafka" % "kafka-clients" % "2.8.0" // Add Kafka clients dependency
 )
 libraryDependencies += ws
 
-libraryDependencies += "org.postgresql" % "postgresql" % "42.2.23"
-
-
-
-
-
-// Adds additional packages into Twirl
-//TwirlKeys.templateImports += "com.playapp.controllers._"
-
-// Adds additional packages into conf/routes
+// Uncomment if additional Twirl or Routes imports are needed
+// TwirlKeys.templateImports += "com.playapp.controllers._"
 // play.sbt.routes.RoutesKeys.routesImport += "com.playapp.binders._"

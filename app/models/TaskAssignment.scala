@@ -1,5 +1,7 @@
 package models
 
+import models.AssignmentStatus.AssignmentStatus
+
 import javax.inject.Inject
 import play.api.db.slick.DatabaseConfigProvider
 import slick.jdbc.PostgresProfile.api._
@@ -10,21 +12,42 @@ import play.api.libs.json._
 import slick.ast.BaseTypedType
 import slick.jdbc.{JdbcProfile, JdbcType}
 
+import play.api.libs.json.{Format, JsString, JsResult, JsValue, Json}
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
 case class TaskAssignment(
-                           id: Long,
+                           id: Option[Long] = None, // Make `id` an Option with a default of None
                            eventPlanId: Long,
                            taskTemplateId: Long,
                            serviceTeamId: Long,
                            startTime: LocalDateTime,
                            endTime: LocalDateTime,
-                           specialRequirements: Option[String],
-                           expectations: Option[String],
-                           status: AssignmentStatus.AssignmentStatus
+                           specialRequirements: Option[String] = None,
+                           expectations: Option[String] = None,
+                           status: AssignmentStatus
                          )
 
 object TaskAssignment {
   implicit val taskAssignmentFormat: OFormat[TaskAssignment] = Json.format[TaskAssignment]
 }
+
+object LocalDateTimeJson {
+
+  // Define an ISO date formatter
+  private val dateTimeFormatter = DateTimeFormatter.ISO_DATE_TIME
+
+  // Reads and Writes for LocalDateTime
+  implicit val localDateTimeFormat: Format[LocalDateTime] = new Format[LocalDateTime] {
+    override def reads(json: JsValue): JsResult[LocalDateTime] = json.validate[String].map { dateStr =>
+      LocalDateTime.parse(dateStr, dateTimeFormatter)
+    }
+
+    override def writes(dateTime: LocalDateTime): JsValue = JsString(dateTime.format(dateTimeFormatter))
+  }
+}
+
+import LocalDateTimeJson.localDateTimeFormat
 
 object AssignmentStatus extends Enumeration {
   type AssignmentStatus = Value
@@ -41,7 +64,7 @@ object AssignmentStatus extends Enumeration {
 }
 
 class TaskAssignmentTable(tag: Tag) extends Table[TaskAssignment](tag, "task_assignment") {
-  def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
+  def id = column[Option[Long]]("id", O.PrimaryKey, O.AutoInc)
   def eventPlanId = column[Long]("event_plan_id")
   def taskTemplateId = column[Long]("task_template_id")
   def serviceTeamId = column[Long]("service_team_id")

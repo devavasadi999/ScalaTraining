@@ -8,7 +8,7 @@ import play.api.libs.json._
 import slick.ast.BaseTypedType
 import slick.jdbc.{JdbcProfile, JdbcType}
 
-case class TaskIssue(id: Long, taskAssignmentId: Long, problem: String, status: IssueStatus.IssueStatus)
+case class TaskIssue(id: Option[Long], taskAssignmentId: Long, problem: String, status: IssueStatus.IssueStatus)
 
 object IssueStatus extends Enumeration {
   type IssueStatus = Value
@@ -32,7 +32,7 @@ object TaskIssue {
 
 // Slick Table Definition for TaskIssue
 class TaskIssueTable(tag: Tag) extends Table[TaskIssue](tag, "task_issue") {
-  def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
+  def id = column[Option[Long]]("id", O.PrimaryKey, O.AutoInc)
   def taskAssignmentId = column[Long]("task_assignment_id")
   def problem = column[String]("problem")
   def status = column[IssueStatus.IssueStatus]("status")
