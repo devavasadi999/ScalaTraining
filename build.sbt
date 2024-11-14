@@ -13,8 +13,8 @@ libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.30"
 libraryDependencies ++= Seq(
   "org.playframework" %% "play-slick"            % "6.1.0",
   "org.playframework" %% "play-slick-evolutions" % "6.1.0",
-  "mysql" % "mysql-connector-java" % "8.0.26"
-
+  "mysql" % "mysql-connector-java" % "8.0.26",
+  "org.apache.kafka" % "kafka-clients" % "2.8.0" // Add Kafka clients dependency
 )
 libraryDependencies += ws
 

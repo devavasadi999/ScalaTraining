@@ -43,13 +43,19 @@ class EquipmentAllocationRepository @Inject()(dbConfigProvider: DatabaseConfigPr
     db.run(equipmentAllocations.filter(_.id === allocation.id).update(allocation))
 
   // Update the status of an allocation by allocation ID
-  def updateStatusAndReturnDate(id: Long, status: AllocationStatus.AllocationStatus, actualReturnDate: LocalDate): Future[Int] = {
-    db.run(
-      equipmentAllocations
-        .filter(_.id === id)
-        .map(a => (a.status, a.actualReturnDate))
-        .update((status, Some(actualReturnDate)))
-    )
+  def updateStatusAndReturnDate(id: Long, status: AllocationStatus.AllocationStatus, actualReturnDate: LocalDate): Future[Option[EquipmentAllocation]] = {
+    val updateAction = equipmentAllocations
+      .filter(_.id === id)
+      .map(a => (a.status, a.actualReturnDate))
+      .update((status, Some(actualReturnDate)))
+
+    // Run the update first, then fetch the updated record
+    db.run(updateAction).flatMap {
+      case 1 => // If the update was successful (affected 1 row), fetch the updated object
+        db.run(equipmentAllocations.filter(_.id === id).result.headOption)
+      case _ =>
+        Future.successful(None) // If the update failed (no rows affected), return None
+    }
   }
 
 
@@ -71,5 +77,12 @@ class EquipmentAllocationRepository @Inject()(dbConfigProvider: DatabaseConfigPr
         .result
         .headOption
     }
+  }
+
+  def findOverdueAllocations(currentDate: LocalDate): Future[Seq[EquipmentAllocation]] = {
+    val query = equipmentAllocations
+      .filter(allocation => allocation.expectedReturnDate < currentDate && allocation.status =!= AllocationStatus.Returned)
+      .result
+    db.run(query)
   }
 }

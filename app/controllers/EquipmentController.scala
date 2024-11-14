@@ -4,6 +4,8 @@ import javax.inject._
 import models._
 import play.api.libs.json._
 import play.api.mvc._
+import services.KafkaProducerService
+
 import scala.concurrent.{ExecutionContext, Future}
 import java.time.LocalDate
 
@@ -13,7 +15,8 @@ class EquipmentController @Inject()(
                                      equipmentTypeRepository: EquipmentTypeRepository,
                                      equipmentAllocationRepository: EquipmentAllocationRepository,
                                      equipmentRepairRepository: EquipmentRepairRepository,
-                                     cc: ControllerComponents
+                                     cc: ControllerComponents,
+                                     kafkaProducer: KafkaProducerService
                                    )(implicit ec: ExecutionContext) extends AbstractController(cc) {
 
   implicit val equipmentFormat: Format[Equipment] = Json.format[Equipment]
@@ -36,7 +39,6 @@ class EquipmentController @Inject()(
         // Check if the equipment is currently allocated
         equipmentAllocationRepository.findActiveAllocationByEquipment(equipmentId).flatMap {
           case Some(_) =>
-            // Equipment is already allocated
             Future.successful(BadRequest("Equipment is already allocated"))
           case None =>
             // Equipment is available, proceed with allocation
@@ -51,6 +53,14 @@ class EquipmentController @Inject()(
               status = AllocationStatus.Allocated
             )
             equipmentAllocationRepository.add(allocation).map { createdAllocation =>
+              // Send Inventory Team Notification for allocation
+              val message = Json.obj(
+                "messageType" -> "InventoryTeamNotification",
+                "toEmails" -> Json.arr("inventory_team@example.com"), // Replace with actual emails
+                "notificationType" -> "Equipment Allocated",
+                "equipmentAllocation" -> Json.toJson(createdAllocation)
+              )
+              kafkaProducer.send("rawNotification", message.toString)
               Created(Json.toJson(createdAllocation))
             }
         }
@@ -64,12 +74,23 @@ class EquipmentController @Inject()(
     val statusOpt = (request.body \ "status").asOpt[AllocationStatus.AllocationStatus]
 
     statusOpt match {
-      case Some(AllocationStatus.Returned) =>
+      case Some(status: AllocationStatus.AllocationStatus) =>
         val actualReturnDate = LocalDate.now()
-        equipmentAllocationRepository.updateStatusAndReturnDate(equipmentAllocationId, AllocationStatus.Returned, actualReturnDate).map {
-          case 1 => Ok("Equipment successfully returned with updated return date")
-          case _ => NotFound("Equipment allocation not found")
+        equipmentAllocationRepository.updateStatusAndReturnDate(equipmentAllocationId, status, actualReturnDate).flatMap {
+          case Some(updatedAllocation) =>
+            // Send Inventory Team Notification for return
+            val message = Json.obj(
+              "messageType" -> "InventoryTeamNotification",
+              "toEmails" -> Json.arr("inventory_team@example.com"), // Replace with actual emails
+              "notificationType" -> "Equipment Returned",
+              "equipmentAllocation" -> Json.toJson(updatedAllocation)
+            )
+            kafkaProducer.send("rawNotification", message.toString)
+            Future.successful(Ok(Json.toJson(updatedAllocation))) // Return the updated allocation object in the response
+
+          case None => Future.successful(NotFound("Equipment allocation not found"))
         }
+
       case _ =>
         Future.successful(BadRequest("Invalid status"))
     }
@@ -88,7 +109,18 @@ class EquipmentController @Inject()(
           repairDescription = serviceDescription,
           status = RepairStatus.Pending
         )
+
+        // Save the repair request in the repository
         equipmentRepairRepository.add(repairRequest).map { createdRepairRequest =>
+          // Send a maintenance notification to Kafka
+          val message = Json.obj(
+            "messageType" -> "MaintenanceTeamNotification",
+            "toEmails" -> Json.arr("maintenance_team@example.com"), // Update with actual team emails
+            "equipmentRepair" -> Json.toJson(createdRepairRequest)
+          )
+          kafkaProducer.send("rawNotification", message.toString)
+
+          // Return the created repair request in the response
           Created(Json.toJson(createdRepairRequest))
         }
       case _ =>
