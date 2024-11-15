@@ -47,7 +47,6 @@ class NotificationActor extends Actor {
         case "Fixed" =>
           frequencyValues.foreach { time =>
             val delay = calculateDelay(time)
-            println(s"Delay is ${delay}")
             context.system.scheduler.scheduleOnce(delay) {
               sendEmail(toEmails, subject, body)
             }
