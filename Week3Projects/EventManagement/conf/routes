@@ -1,0 +1,33 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# https://www.playframework.com/documentation/latest/ScalaRouting
+# ~~~~
+
+# EventPlan APIs
+POST    /event-plans                     controllers.EventPlanController.createEventPlan
+GET     /event-plans                     controllers.EventPlanController.listEventPlans
+GET     /event-plans/:id                 controllers.EventPlanController.getEventPlanWithAssignments(id: Long)
+
+# TaskTemplate APIs
+POST    /taskTemplates                  controllers.TaskTemplateController.addTaskTemplate
+GET     /taskTemplates/serviceTeam/:serviceTeamId  controllers.TaskTemplateController.getTaskTemplates(serviceTeamId: Long)
+
+# ServiceTeam APIs
+POST    /serviceTeams                   controllers.ServiceTeamController.addServiceTeam
+GET     /serviceTeams                   controllers.ServiceTeamController.listServiceTeams
+
+# TaskAssignment APIs
+POST    /task-assignments                controllers.TaskAssignmentController.addTaskAssignment
+GET     /task-assignments/event-plan/:eventPlanId  controllers.TaskAssignmentController.getTaskAssignments(eventPlanId: Long)
+GET     /task-assignments/service-team/:serviceTeamId   controllers.TaskAssignmentController.getTaskAssignmentsByServiceTeam(serviceTeamId: Long)
+PATCH   /task-assignments/:taskAssignmentId       controllers.TaskAssignmentController.updateTaskAssignment(taskAssignmentId: Long)
+GET     /task-assignments/:id                     controllers.TaskAssignmentController.getTaskAssignmentById(id: Long)
+
+# TaskIssue APIs
+POST    /taskIssues                     controllers.TaskIssueController.addTaskIssue
+PATCH   /taskIssues/:taskIssueId            controllers.TaskIssueController.updateTaskIssueStatus(taskIssueId: Long)
+GET     /taskIssues                     controllers.TaskIssueController.listTaskIssues
+GET     /taskIssues/eventPlan/:eventPlanId         controllers.TaskIssueController.getTaskIssuesByEventPlan(eventPlanId: Long)
+GET     /taskIssues/serviceTeam/:serviceTeamId     controllers.TaskIssueController.getTaskIssuesByServiceTeam(serviceTeamId: Long)
+GET     /taskIssues/taskAssignment/:taskAssignmentId controllers.TaskIssueController.getTaskIssuesByTaskAssignment(taskAssignmentId: Long)
+GET     /taskIssues/:id                          controllers.TaskIssueController.getTaskIssueById(id: Long)

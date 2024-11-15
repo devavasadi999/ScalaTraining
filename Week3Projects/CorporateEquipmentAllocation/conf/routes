@@ -1,0 +1,34 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# https://www.playframework.com/documentation/latest/ScalaRouting
+# ~~~~
+
+# Equipment Allocation Routes
+
+# 1) Allocate equipment to an employee - POST
+POST    /equipment_allocation                     controllers.EquipmentController.allocateEquipment
+
+# 2) Return equipment and update actual return date - PATCH
+PATCH   /equipment_allocation/:equipmentAllocationId   controllers.EquipmentController.changeStatus(equipmentAllocationId: Long)
+
+# Equipment Repair Routes
+
+# 3) Create a repair request for equipment - POST
+POST    /equipment_repair                         controllers.EquipmentController.raiseRepairRequest
+
+# 4) Update repair request status - PATCH
+PATCH   /equipment_repair/:equipmentRepairId   controllers.EquipmentController.updateRepairStatus(equipmentRepairId: Long)
+
+# Equipment Retrieval Routes
+
+# 5) Get all equipment of a specific type - GET
+GET     /equipment/type/:equipmentTypeId          controllers.EquipmentController.getEquipmentsByType(equipmentTypeId: Long)
+
+# 6) Get allocation details by allocation ID - GET
+GET     /equipment_allocation/:equipmentAllocationId  controllers.EquipmentController.getEquipmentAllocationDetails(equipmentAllocationId: Long)
+
+# 7) Get equipment details by equipment ID - GET
+GET     /equipment/:equipmentId                   controllers.EquipmentController.getEquipmentDetails(equipmentId: Long)
+
+# 8) Get repair request details by repair ID - GET
+GET     /equipment_repair/:equipmentRepairId      controllers.EquipmentController.getEquipmentRepairDetails(equipmentRepairId: Long)
