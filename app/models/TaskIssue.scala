@@ -8,7 +8,7 @@ import play.api.libs.json._
 import slick.ast.BaseTypedType
 import slick.jdbc.{JdbcProfile, JdbcType}
 
-case class TaskIssue(id: Option[Long], taskAssignmentId: Long, problem: String, status: IssueStatus.IssueStatus)
+case class TaskIssue(id: Option[Long], taskAssignmentId: Long, problem: String, status: IssueStatus.IssueStatus = IssueStatus.Pending)
 
 object IssueStatus extends Enumeration {
   type IssueStatus = Value

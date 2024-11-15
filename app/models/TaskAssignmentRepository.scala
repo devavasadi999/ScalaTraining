@@ -14,10 +14,22 @@ class TaskAssignmentRepository @Inject()(dbConfigProvider: DatabaseConfigProvide
   import profile.api._
 
   val taskAssignments = TableQuery[TaskAssignmentTable]
+  val taskTemplates = TableQuery[TaskTemplateTable]
+  val serviceTeams = TableQuery[ServiceTeamTable]
+  val eventPlans = TableQuery[EventPlanTable]
 
   def list(): Future[Seq[TaskAssignment]] = db.run(taskAssignments.result)
 
-  def find(id: Long): Future[Option[TaskAssignment]] = db.run(taskAssignments.filter(_.id === id).result.headOption)
+  def find(id: Long): Future[Option[(TaskAssignment, TaskTemplate, ServiceTeam, EventPlan)]] = {
+    val query = for {
+      taskAssignment <- taskAssignments if taskAssignment.id === id
+      taskTemplate <- taskTemplates if taskAssignment.taskTemplateId === taskTemplate.id
+      serviceTeam <- serviceTeams if taskAssignment.serviceTeamId === serviceTeam.id
+      eventPlan <- eventPlans if taskAssignment.eventPlanId === eventPlan.id
+    } yield (taskAssignment, taskTemplate, serviceTeam, eventPlan)
+
+    db.run(query.result.headOption)
+  }
 
   def add(eventPlan: TaskAssignment): Future[TaskAssignment] = {
     val action = (taskAssignments returning taskAssignments.map(_.id)
@@ -31,12 +43,51 @@ class TaskAssignmentRepository @Inject()(dbConfigProvider: DatabaseConfigProvide
 
   def delete(id: Long): Future[Int] = db.run(taskAssignments.filter(_.id === id).delete)
 
-  def findByEventPlan(eventPlanId: Long): Future[Seq[TaskAssignment]] = db.run(taskAssignments.filter(_.eventPlanId === eventPlanId).result)
+  def findByEventPlan(eventPlanId: Long): Future[Seq[(TaskAssignment, TaskTemplate, ServiceTeam, EventPlan)]] = {
+    val query = for {
+      taskAssignment <- taskAssignments if taskAssignment.eventPlanId === eventPlanId
+      taskTemplate <- taskTemplates if taskAssignment.taskTemplateId === taskTemplate.id
+      serviceTeam <- serviceTeams if taskAssignment.serviceTeamId === serviceTeam.id
+      eventPlan <- eventPlans if taskAssignment.eventPlanId === eventPlan.id
+    } yield (taskAssignment, taskTemplate, serviceTeam, eventPlan)
 
-  def update(taskAssignmentId: Long, status: Option[AssignmentStatus.AssignmentStatus], endTime: Option[LocalDateTime]): Future[Int] = {
-    val query = taskAssignments.filter(_.id === taskAssignmentId)
-    val updateAction = query.map(ta => (ta.status, ta.endTime)).update((status.get, endTime.get))
-    db.run(updateAction)
+    db.run(query.result)
+  }
+
+  def findByServiceTeamId(serviceTeamId: Long): Future[Seq[(TaskAssignment, TaskTemplate, ServiceTeam, EventPlan)]] = {
+    val query = for {
+      taskAssignment <- taskAssignments if taskAssignment.serviceTeamId === serviceTeamId
+      taskTemplate <- taskTemplates if taskAssignment.taskTemplateId === taskTemplate.id
+      serviceTeam <- serviceTeams if taskAssignment.serviceTeamId === serviceTeam.id
+      eventPlan <- eventPlans if taskAssignment.eventPlanId === eventPlan.id
+    } yield (taskAssignment, taskTemplate, serviceTeam, eventPlan)
+
+    db.run(query.result)
+  }
+
+  def updatePartial(
+                     id: Long,
+                     statusOpt: Option[AssignmentStatus.AssignmentStatus],
+                     endTimeOpt: Option[LocalDateTime]
+                   ): Future[Option[TaskAssignment]] = {
+    val query = taskAssignments.filter(_.id === id)
+
+    // Dynamically construct the update query
+    val updateActions = Seq(
+      statusOpt.map(status => query.map(_.status).update(status)),
+      endTimeOpt.map(endTime => query.map(_.endTime).update(endTime))
+    ).flatten
+
+    // Perform the updates sequentially
+    val combinedUpdate = DBIO.sequence(updateActions)
+
+    db.run(combinedUpdate).flatMap { results =>
+      if (results.exists(_ > 0)) {
+        db.run(query.result.headOption) // Fetch the updated task assignment
+      } else {
+        Future.successful(None)
+      }
+    }
   }
 
 }
