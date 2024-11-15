@@ -9,7 +9,7 @@
 POST    /equipment_allocation                     controllers.EquipmentController.allocateEquipment
 
 # 2) Return equipment and update actual return date - PATCH
-PATCH   /equipment_allocation/:equipmentAllocationId   controllers.EquipmentController.returnEquipment(equipmentAllocationId: Long)
+PATCH   /equipment_allocation/:equipmentAllocationId   controllers.EquipmentController.changeStatus(equipmentAllocationId: Long)
 
 # Equipment Repair Routes
 
@@ -31,4 +31,4 @@ GET     /equipment_allocation/:equipmentAllocationId  controllers.EquipmentContr
 GET     /equipment/:equipmentId                   controllers.EquipmentController.getEquipmentDetails(equipmentId: Long)
 
 # 8) Get repair request details by repair ID - GET
-GET     /equipment_repair/:equipmentRepairId      controllers.EquipmentController.getRepairRequestDetails(equipmentRepairId: Long)
+GET     /equipment_repair/:equipmentRepairId      controllers.EquipmentController.getEquipmentRepairDetails(equipmentRepairId: Long)

@@ -16,7 +16,8 @@ class EquipmentController @Inject()(
                                      equipmentAllocationRepository: EquipmentAllocationRepository,
                                      equipmentRepairRepository: EquipmentRepairRepository,
                                      cc: ControllerComponents,
-                                     kafkaProducer: KafkaProducerService
+                                     kafkaProducer: KafkaProducerService,
+                                     employeeRepository: EmployeeRepository
                                    )(implicit ec: ExecutionContext) extends AbstractController(cc) {
 
   implicit val equipmentFormat: Format[Equipment] = Json.format[Equipment]
@@ -52,16 +53,32 @@ class EquipmentController @Inject()(
               actualReturnDate = None,
               status = AllocationStatus.Allocated
             )
-            equipmentAllocationRepository.add(allocation).map { createdAllocation =>
-              // Send Inventory Team Notification for allocation
-              val message = Json.obj(
-                "messageType" -> "InventoryTeamNotification",
-                "toEmails" -> Json.arr("inventory_team@example.com"), // Replace with actual emails
-                "notificationType" -> "Equipment Allocated",
-                "equipmentAllocation" -> Json.toJson(createdAllocation)
-              )
-              kafkaProducer.send("rawNotification", message.toString)
-              Created(Json.toJson(createdAllocation))
+            equipmentAllocationRepository.add(allocation).flatMap { createdAllocation =>
+              // Fetch Equipment, EquipmentType, and Employee details
+              for {
+                equipmentOpt <- equipmentRepository.find(equipmentId)
+                employeeOpt <- employeeRepository.find(employeeId)
+              } yield {
+                (equipmentOpt, employeeOpt) match {
+                  case (Some((equipment, equipmentType)), Some(employee)) =>
+                    // Create the notification message
+                    val message = Json.obj(
+                      "message_type" -> "InventoryTeamNotification",
+                      "to_emails" -> Json.arr("inventory_team@example.com"), // Replace with actual emails
+                      "notificationType" -> "Equipment Allocated",
+                      "equipmentAllocation" -> Json.toJson(createdAllocation),
+                      "equipment" -> Json.toJson(equipment),
+                      "equipmentType" -> Json.toJson(equipmentType),
+                      "employee" -> Json.toJson(employee)
+                    )
+                    // Send the notification to Kafka
+                    kafkaProducer.send("rawNotification", message.toString)
+                    Created(Json.toJson(createdAllocation))
+
+                  case _ =>
+                    InternalServerError("Failed to fetch related equipment or employee details")
+                }
+              }
             }
         }
       case _ =>
@@ -70,29 +87,39 @@ class EquipmentController @Inject()(
   }
 
   // 2) Return Equipment - PATCH
-  def returnEquipment(equipmentAllocationId: Long) = Action.async(parse.json) { request =>
-    val statusOpt = (request.body \ "status").asOpt[AllocationStatus.AllocationStatus]
+  def changeStatus(equipmentAllocationId: Long) = Action.async {
+    // Fetch the equipment allocation details
+    equipmentAllocationRepository.find(equipmentAllocationId).flatMap {
+      case Some((allocation, equipment, equipmentType, employee)) =>
+        if (allocation.status == AllocationStatus.Returned) {
+          // If already returned, throw an error
+          Future.successful(BadRequest("Equipment is already returned."))
+        } else {
+          // Set the status to RETURNED and update the actual return date
+          val actualReturnDate = LocalDate.now()
+          equipmentAllocationRepository.updateStatusAndReturnDate(equipmentAllocationId, AllocationStatus.Returned, actualReturnDate).flatMap {
+            case Some((updatedAllocation, equipment, equipmentType, employee)) =>
+              // Create the notification message
+              val message = Json.obj(
+                "message_type" -> "InventoryTeamNotification",
+                "to_emails" -> Json.arr("inventory_team@example.com"), // Replace with actual emails
+                "notificationType" -> "Equipment Returned",
+                "equipmentAllocation" -> Json.toJson(updatedAllocation),
+                "equipment" -> Json.toJson(equipment),
+                "equipmentType" -> Json.toJson(equipmentType),
+                "employee" -> Json.toJson(employee)
+              )
+              // Send the notification to Kafka
+              kafkaProducer.send("rawNotification", message.toString)
+              Future.successful(Ok(Json.toJson(updatedAllocation))) // Return the updated allocation object in the response
 
-    statusOpt match {
-      case Some(status: AllocationStatus.AllocationStatus) =>
-        val actualReturnDate = LocalDate.now()
-        equipmentAllocationRepository.updateStatusAndReturnDate(equipmentAllocationId, status, actualReturnDate).flatMap {
-          case Some(updatedAllocation) =>
-            // Send Inventory Team Notification for return
-            val message = Json.obj(
-              "messageType" -> "InventoryTeamNotification",
-              "toEmails" -> Json.arr("inventory_team@example.com"), // Replace with actual emails
-              "notificationType" -> "Equipment Returned",
-              "equipmentAllocation" -> Json.toJson(updatedAllocation)
-            )
-            kafkaProducer.send("rawNotification", message.toString)
-            Future.successful(Ok(Json.toJson(updatedAllocation))) // Return the updated allocation object in the response
-
-          case None => Future.successful(NotFound("Equipment allocation not found"))
+            case None => Future.successful(NotFound("Equipment allocation not found"))
+          }
         }
 
-      case _ =>
-        Future.successful(BadRequest("Invalid status"))
+      case None =>
+        // If the equipment allocation is not found
+        Future.successful(NotFound("Equipment allocation not found"))
     }
   }
 
@@ -103,26 +130,36 @@ class EquipmentController @Inject()(
 
     (equipmentIdOpt, serviceDescriptionOpt) match {
       case (Some(equipmentId), Some(serviceDescription)) =>
-        val repairRequest = EquipmentRepair(
-          id = 0,
-          equipmentId = equipmentId,
-          repairDescription = serviceDescription,
-          status = RepairStatus.Pending
-        )
+        // Fetch Equipment and EquipmentType details before saving the repair request
+        equipmentRepository.find(equipmentId).flatMap {
+          case Some((equipment, equipmentType)) =>
+            val repairRequest = EquipmentRepair(
+              id = 0,
+              equipmentId = equipmentId,
+              repairDescription = serviceDescription,
+              status = RepairStatus.Pending
+            )
 
-        // Save the repair request in the repository
-        equipmentRepairRepository.add(repairRequest).map { createdRepairRequest =>
-          // Send a maintenance notification to Kafka
-          val message = Json.obj(
-            "messageType" -> "MaintenanceTeamNotification",
-            "toEmails" -> Json.arr("maintenance_team@example.com"), // Update with actual team emails
-            "equipmentRepair" -> Json.toJson(createdRepairRequest)
-          )
-          kafkaProducer.send("rawNotification", message.toString)
+            // Save the repair request in the repository
+            equipmentRepairRepository.add(repairRequest).map { createdRepairRequest =>
+              // Send a maintenance notification to Kafka
+              val message = Json.obj(
+                "message_type" -> "MaintenanceTeamNotification",
+                "to_emails" -> Json.arr("maintenance_team@example.com"), // Update with actual team emails
+                "equipmentRepair" -> Json.toJson(createdRepairRequest),
+                "equipment" -> Json.toJson(equipment),
+                "equipmentType" -> Json.toJson(equipmentType)
+              )
+              kafkaProducer.send("rawNotification", message.toString)
 
-          // Return the created repair request in the response
-          Created(Json.toJson(createdRepairRequest))
+              // Return the created repair request in the response
+              Created(Json.toJson(createdRepairRequest))
+            }
+
+          case None =>
+            Future.successful(NotFound("Equipment not found"))
         }
+
       case _ =>
         Future.successful(BadRequest("Invalid JSON format or missing fields"))
     }
@@ -145,32 +182,68 @@ class EquipmentController @Inject()(
 
   // 5) Get Equipments for a Particular Equipment Type - GET
   def getEquipmentsByType(equipmentTypeId: Long) = Action.async {
-    equipmentRepository.findByType(equipmentTypeId).map { equipments =>
-      Ok(Json.toJson(equipments))
+    equipmentRepository.findByType(equipmentTypeId).map { equipmentWithTypes =>
+      if (equipmentWithTypes.nonEmpty) {
+        val response = Json.toJson(equipmentWithTypes.map {
+          case (equipment, equipmentType) =>
+            Json.obj(
+              "equipment" -> Json.toJson(equipment),
+              "equipmentType" -> Json.toJson(equipmentType)
+            )
+        })
+        Ok(response)
+      } else {
+        NotFound(Json.obj("error" -> s"No equipment found for type ID $equipmentTypeId"))
+      }
     }
   }
 
   // 6) Get Equipment Allocation Details for a Particular Equipment Allocation ID - GET
   def getEquipmentAllocationDetails(equipmentAllocationId: Long) = Action.async {
     equipmentAllocationRepository.find(equipmentAllocationId).map {
-      case Some(allocation) => Ok(Json.toJson(allocation))
-      case None => NotFound
+      case Some((allocation, equipment, equipmentType, employee)) =>
+        val response = Json.obj(
+          "equipmentAllocation" -> Json.toJson(allocation),
+          "equipment" -> Json.toJson(equipment),
+          "equipmentType" -> Json.toJson(equipmentType),
+          "employee" -> Json.toJson(employee)
+        )
+        Ok(response)
+
+      case None =>
+        NotFound(Json.obj("error" -> s"No equipment allocation found for ID $equipmentAllocationId"))
     }
   }
 
   // 7) Get Equipment Details for a Particular Equipment ID - GET
   def getEquipmentDetails(equipmentId: Long) = Action.async {
     equipmentRepository.find(equipmentId).map {
-      case Some(equipment) => Ok(Json.toJson(equipment))
-      case None => NotFound
+      case Some((equipment, equipmentType)) =>
+        val response = Json.obj(
+          "equipment" -> Json.toJson(equipment),
+          "equipmentType" -> Json.toJson(equipmentType)
+        )
+        Ok(response)
+      case None =>
+        NotFound(Json.obj("error" -> s"Equipment with ID $equipmentId not found"))
     }
   }
 
   // 8) Get Repair Request Details for a Particular Equipment Repair ID - GET
-  def getRepairRequestDetails(equipmentRepairId: Long) = Action.async {
-    equipmentRepairRepository.find(equipmentRepairId).map {
-      case Some(repairRequest) => Ok(Json.toJson(repairRequest))
-      case None => NotFound
+  def getEquipmentRepairDetails(repairId: Long) = Action.async {
+    equipmentRepairRepository.find(repairId).map {
+      case Some((repair, allocation, equipment, equipmentType)) =>
+        val response = Json.obj(
+          "equipmentRepair" -> Json.toJson(repair),
+          "equipmentAllocation" -> Json.toJson(allocation),
+          "equipment" -> Json.toJson(equipment),
+          "equipmentType" -> Json.toJson(equipmentType)
+        )
+        Ok(response)
+
+      case None =>
+        NotFound(Json.obj("error" -> s"No equipment repair found for ID $repairId"))
     }
   }
+
 }

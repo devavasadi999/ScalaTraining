@@ -15,10 +15,18 @@ class EquipmentRepository @Inject()(dbConfigProvider: DatabaseConfigProvider)(im
 
   val equipments = TableQuery[EquipmentTable]
   val equipmentAllocations = TableQuery[EquipmentAllocationTable]
+  val equipmentTypes = TableQuery[EquipmentTypeTable]
 
   def list(): Future[Seq[Equipment]] = db.run(equipments.result)
 
-  def find(id: Long): Future[Option[Equipment]] = db.run(equipments.filter(_.id === id).result.headOption)
+  def find(id: Long): Future[Option[(Equipment, EquipmentType)]] = {
+    val query = for {
+      equipment <- equipments if equipment.id === id
+      equipmentType <- equipmentTypes if equipment.equipmentTypeId === equipmentType.id
+    } yield (equipment, equipmentType)
+
+    db.run(query.result.headOption)
+  }
 
   def add(equipment: Equipment): Future[Equipment] = {
     val action = (equipments returning equipments.map(_.id)
@@ -32,9 +40,14 @@ class EquipmentRepository @Inject()(dbConfigProvider: DatabaseConfigProvider)(im
 
   def delete(id: Long): Future[Int] = db.run(equipments.filter(_.id === id).delete)
 
-  // New methods
-  def findByType(equipmentTypeId: Long): Future[Seq[Equipment]] =
-    db.run(equipments.filter(_.equipmentTypeId === equipmentTypeId).result)
+  def findByType(equipmentTypeId: Long): Future[Seq[(Equipment, EquipmentType)]] = {
+    val query = for {
+      equipment <- equipments if equipment.equipmentTypeId === equipmentTypeId
+      equipmentType <- equipmentTypes if equipment.equipmentTypeId === equipmentType.id
+    } yield (equipment, equipmentType)
+
+    db.run(query.result)
+  }
 
   def findAvailableEquipmentByType(equipmentTypeId: Long): Future[Seq[Equipment]] = {
     // Subquery to get IDs of equipment that are currently allocated

@@ -16,8 +16,8 @@ class StartupTasks @Inject()(dbInitializer: DatabaseInitializer,
   println("Running start up tasks")
   dbInitializer.initialize()
 
-  // Set the specific time for the daily check (e.g., 8:00 AM)
-  private val dailyCheckTime: LocalTime = LocalTime.of(17, 55)
+  // Set the specific time for the daily check (e.g., 07:08 PM)
+  private val dailyCheckTime: LocalTime = LocalTime.of(19, 17)
   private val scheduler: ScheduledExecutorService = Executors.newScheduledThreadPool(1)
   startDailyOverdueCheck()
 
@@ -31,7 +31,7 @@ class StartupTasks @Inject()(dbInitializer: DatabaseInitializer,
           checkForOverdueAllocations()
         }
       },
-      initialDelay,
+      0,
       TimeUnit.DAYS.toSeconds(1), // Repeat every 24 hours
       TimeUnit.SECONDS
     )
@@ -53,27 +53,22 @@ class StartupTasks @Inject()(dbInitializer: DatabaseInitializer,
   private def checkForOverdueAllocations(): Unit = {
     val currentDate = LocalDateTime.now().toLocalDate
 
-    // Retrieve overdue allocations as a Future[Seq[EquipmentAllocation]]
+    // Retrieve overdue allocations along with Equipment, EquipmentType, and Employee details
     equipmentAllocationRepository.findOverdueAllocations(currentDate).flatMap { overdueAllocations =>
       Future.sequence(
-        overdueAllocations.map { allocation =>
-          // Retrieve the employee email associated with this equipment allocation
-          employeeRepository.findEmailById(allocation.employeeId).flatMap {
-            case Some(employeeEmail) =>
-              // Create and send an overdue reminder message to the employee's email
-              val message = Json.obj(
-                "messageType" -> "OverdueReminder",
-                "toEmails" -> Json.arr(employeeEmail),
-                "equipmentAllocation" -> Json.toJson(allocation)
-              )
-              kafkaProducer.send("rawNotification", message.toString)
-              println(s"Overdue reminder sent to $employeeEmail for equipment allocation: $allocation")
-              Future.successful(())
-
-            case None =>
-              println(s"Failed to send overdue reminder: No email found for employeeId ${allocation.employeeId}")
-              Future.successful(())
-          }
+        overdueAllocations.map { case (allocation, equipment, equipmentType, employee) =>
+          // Create and send an overdue reminder message to the employee's email
+          val message = Json.obj(
+            "message_type" -> "OverdueReminder",
+            "to_emails" -> Json.arr(employee.email),
+            "equipmentAllocation" -> Json.toJson(allocation),
+            "equipment" -> Json.toJson(equipment),
+            "equipmentType" -> Json.toJson(equipmentType),
+            "employee" -> Json.toJson(employee)
+          )
+          kafkaProducer.send("rawNotification", message.toString)
+          println(s"Overdue reminder sent to ${employee.email} for equipment allocation: $allocation")
+          Future.successful(())
         }
       )
     }.recover {
@@ -81,5 +76,6 @@ class StartupTasks @Inject()(dbInitializer: DatabaseInitializer,
         println(s"Failed to check overdue allocations: ${ex.getMessage}")
     }
   }
+
 
 }

@@ -21,5 +21,5 @@ class EmployeeRepository @Inject()(dbConfigProvider: DatabaseConfigProvider)(imp
     db.run(employees.filter(_.id === employeeId).map(_.email).result.headOption)
   }
 
-  // Additional CRUD operations for Employee can be added here as needed
+  def find(id: Long): Future[Option[Employee]] = db.run(employees.filter(_.id === id).result.headOption)
 }

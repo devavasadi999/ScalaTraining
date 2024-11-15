@@ -12,12 +12,24 @@ class EquipmentRepairRepository @Inject()(dbConfigProvider: DatabaseConfigProvid
   import profile.api._
 
   val equipmentRepairs = TableQuery[EquipmentRepairTable]
+  val equipmentAllocations = TableQuery[EquipmentAllocationTable]
+  val equipments = TableQuery[EquipmentTable]
+  val equipmentTypes = TableQuery[EquipmentTypeTable]
 
   // List all repair requests
   def list(): Future[Seq[EquipmentRepair]] = db.run(equipmentRepairs.result)
 
   // Find a repair request by repair ID
-  def find(id: Long): Future[Option[EquipmentRepair]] = db.run(equipmentRepairs.filter(_.id === id).result.headOption)
+  def find(id: Long): Future[Option[(EquipmentRepair, EquipmentAllocation, Equipment, EquipmentType)]] = {
+    val query = for {
+      repair <- equipmentRepairs if repair.id === id
+      allocation <- equipmentAllocations if repair.equipmentId === allocation.equipmentId
+      equipment <- equipments if allocation.equipmentId === equipment.id
+      equipmentType <- equipmentTypes if equipment.equipmentTypeId === equipmentType.id
+    } yield (repair, allocation, equipment, equipmentType)
+
+    db.run(query.result.headOption)
+  }
 
   // List all repair requests for a specific equipment item
   def listByEquipment(equipmentId: Long): Future[Seq[EquipmentRepair]] =

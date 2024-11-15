@@ -14,12 +14,24 @@ class EquipmentAllocationRepository @Inject()(dbConfigProvider: DatabaseConfigPr
   import profile.api._
 
   val equipmentAllocations = TableQuery[EquipmentAllocationTable]
+  val equipments = TableQuery[EquipmentTable]
+  val equipmentTypes = TableQuery[EquipmentTypeTable]
+  val employees = TableQuery[EmployeeTable]
 
   // List all allocations
   def list(): Future[Seq[EquipmentAllocation]] = db.run(equipmentAllocations.result)
 
   // Find an allocation by allocation ID
-  def find(id: Long): Future[Option[EquipmentAllocation]] = db.run(equipmentAllocations.filter(_.id === id).result.headOption)
+  def find(id: Long): Future[Option[(EquipmentAllocation, Equipment, EquipmentType, Employee)]] = {
+    val query = for {
+      allocation <- equipmentAllocations if allocation.id === id
+      equipment <- equipments if allocation.equipmentId === equipment.id
+      equipmentType <- equipmentTypes if equipment.equipmentTypeId === equipmentType.id
+      employee <- employees if allocation.employeeId === employee.id
+    } yield (allocation, equipment, equipmentType, employee)
+
+    db.run(query.result.headOption)
+  }
 
   // Find an allocation by equipment and employee
   def findByEquipmentAndEmployee(equipmentId: Long, employeeId: Long): Future[Option[EquipmentAllocation]] =
@@ -43,21 +55,42 @@ class EquipmentAllocationRepository @Inject()(dbConfigProvider: DatabaseConfigPr
     db.run(equipmentAllocations.filter(_.id === allocation.id).update(allocation))
 
   // Update the status of an allocation by allocation ID
-  def updateStatusAndReturnDate(id: Long, status: AllocationStatus.AllocationStatus, actualReturnDate: LocalDate): Future[Option[EquipmentAllocation]] = {
+  def updateStatusAndReturnDate(
+                                 id: Long,
+                                 status: AllocationStatus.AllocationStatus,
+                                 actualReturnDate: LocalDate
+                               ): Future[Option[(EquipmentAllocation, Equipment, EquipmentType, Employee)]] = {
     val updateAction = equipmentAllocations
       .filter(_.id === id)
       .map(a => (a.status, a.actualReturnDate))
       .update((status, Some(actualReturnDate)))
 
-    // Run the update first, then fetch the updated record
-    db.run(updateAction).flatMap {
-      case 1 => // If the update was successful (affected 1 row), fetch the updated object
-        db.run(equipmentAllocations.filter(_.id === id).result.headOption)
-      case _ =>
-        Future.successful(None) // If the update failed (no rows affected), return None
+    db.run(updateAction).flatMap { rowsAffected =>
+      if (rowsAffected > 0) {
+        find(id) // Use the existing `find` method to retrieve the updated allocation
+      } else {
+        Future.successful(None)
+      }
     }
   }
 
+  def updateStatus(
+                    id: Long,
+                    status: AllocationStatus.AllocationStatus
+                  ): Future[Option[(EquipmentAllocation, Equipment, EquipmentType, Employee)]] = {
+    val updateAction = equipmentAllocations
+      .filter(_.id === id)
+      .map(_.status)
+      .update(status)
+
+    db.run(updateAction).flatMap { rowsAffected =>
+      if (rowsAffected > 0) {
+        find(id) // Use the existing `find` method to fetch the updated details
+      } else {
+        Future.successful(None)
+      }
+    }
+  }
 
   // Delete an allocation by ID
   def delete(id: Long): Future[Int] = db.run(equipmentAllocations.filter(_.id === id).delete)
@@ -79,10 +112,14 @@ class EquipmentAllocationRepository @Inject()(dbConfigProvider: DatabaseConfigPr
     }
   }
 
-  def findOverdueAllocations(currentDate: LocalDate): Future[Seq[EquipmentAllocation]] = {
-    val query = equipmentAllocations
-      .filter(allocation => allocation.expectedReturnDate < currentDate && allocation.status =!= AllocationStatus.Returned)
-      .result
-    db.run(query)
+  def findOverdueAllocations(currentDate: LocalDate): Future[Seq[(EquipmentAllocation, Equipment, EquipmentType, Employee)]] = {
+    val query = for {
+      allocation <- equipmentAllocations if allocation.expectedReturnDate < currentDate && allocation.status =!= AllocationStatus.Returned
+      equipment <- equipments if allocation.equipmentId === equipment.id
+      equipmentType <- equipmentTypes if equipment.equipmentTypeId === equipmentType.id
+      employee <- employees if allocation.employeeId === employee.id
+    } yield (allocation, equipment, equipmentType, employee)
+
+    db.run(query.result)
   }
 }
