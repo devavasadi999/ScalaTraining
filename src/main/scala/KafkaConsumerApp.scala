@@ -1,13 +1,10 @@
-package Project
-
-import Project.{MessageProcessorActor, NotificationActor}
-import akka.actor.{Actor, ActorSystem, Props}
-import akka.kafka.{ConsumerSettings, Subscriptions}
+import actors.{MessageProcessorActor, NotificationActor}
+import akka.actor.{ActorSystem, Props}
 import akka.kafka.scaladsl.Consumer
+import akka.kafka.{ConsumerSettings, Subscriptions}
 import akka.stream.scaladsl.Sink
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.StringDeserializer
-import spray.json._
 
 import scala.concurrent.ExecutionContext
 

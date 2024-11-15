@@ -1,4 +1,4 @@
-package Project
+package actors
 
 import akka.actor.{Actor, Cancellable}
 import akka.actor.ActorSystem

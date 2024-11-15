@@ -1,4 +1,4 @@
-package Project
+package actors
 
 import services.KafkaProducerService
 import spray.json._
