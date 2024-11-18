@@ -122,4 +122,25 @@ class EquipmentAllocationRepository @Inject()(dbConfigProvider: DatabaseConfigPr
 
     db.run(query.result)
   }
+
+  def findByEmployee(employeeId: Long): Future[Seq[(EquipmentAllocation, Equipment, EquipmentType)]] = {
+    val query = for {
+      allocation <- equipmentAllocations if allocation.employeeId === employeeId
+      equipment <- equipments if allocation.equipmentId === equipment.id
+      equipmentType <- equipmentTypes if equipment.equipmentTypeId === equipmentType.id
+    } yield (allocation, equipment, equipmentType)
+
+    db.run(query.result)
+  }
+
+  def findByEquipment(equipmentId: Long): Future[Seq[(EquipmentAllocation, EquipmentType, Employee)]] = {
+    val query = for {
+      allocation <- equipmentAllocations if allocation.equipmentId === equipmentId
+      equipment <- equipments if allocation.equipmentId === equipment.id
+      equipmentType <- equipmentTypes if equipment.equipmentTypeId === equipmentType.id
+      employee <- employees if allocation.employeeId === employee.id
+    } yield (allocation, equipmentType, employee)
+
+    db.run(query.result)
+  }
 }
