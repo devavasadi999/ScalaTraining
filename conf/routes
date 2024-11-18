@@ -15,6 +15,7 @@ GET     /taskTemplates/serviceTeam/:serviceTeamId  controllers.TaskTemplateContr
 # ServiceTeam APIs
 POST    /serviceTeams                   controllers.ServiceTeamController.addServiceTeam
 GET     /serviceTeams                   controllers.ServiceTeamController.listServiceTeams
+GET     /serviceTeams/:serviceTeamId       controllers.ServiceTeamController.getServiceTeam(serviceTeamId: Long)
 
 # TaskAssignment APIs
 POST    /task-assignments                controllers.TaskAssignmentController.addTaskAssignment

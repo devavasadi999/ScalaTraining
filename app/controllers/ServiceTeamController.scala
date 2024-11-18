@@ -41,4 +41,11 @@ class ServiceTeamController @Inject()(
       Ok(Json.toJson(serviceTeams))
     }
   }
+
+  def getServiceTeam(id: Long) = Action.async {
+    serviceTeamRepository.find(id).map {
+      case Some(serviceTeam) => Ok(Json.toJson(serviceTeam))
+      case None              => NotFound(Json.obj("error" -> s"Service team with ID $id not found"))
+    }
+  }
 }
