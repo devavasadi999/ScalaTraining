@@ -10,6 +10,10 @@ import scala.concurrent.ExecutionContext
 
 // Main application to start Kafka consumers and actors
 object KafkaConsumerApp extends App {
+
+  // Load environment variables
+  EnvLoader.loadEnv(".env")
+
   implicit val system: ActorSystem = ActorSystem("KafkaConsumerSystem1")
   implicit val ec: ExecutionContext = system.dispatcher
 
@@ -17,11 +21,14 @@ object KafkaConsumerApp extends App {
   val messageProcessor = system.actorOf(Props[MessageProcessorActor], "messageProcessor")
   val notificationActor = system.actorOf(Props[NotificationActor], "notificationActor")
 
+  val kafkaBrokers = System.getProperty("KAFKA_BROKERS")
+  println(s"Kafka brokers: ${kafkaBrokers}")
+
   // Kafka consumer settings
   val consumerSettings = ConsumerSettings(system, new StringDeserializer, new StringDeserializer)
-    .withBootstrapServers("localhost:9092")
+    .withBootstrapServers(kafkaBrokers)
     .withGroupId("kafkaConsumerAppGroup")  // Adding a unique group ID
-    .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
+    //.withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
     .withProperty(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "30000")
     .withProperty(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, "300000")
 
