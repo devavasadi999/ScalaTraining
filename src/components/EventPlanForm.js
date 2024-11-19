@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TextField, Button, Box, Typography, MenuItem } from '@mui/material';
 import axios from 'axios';
+import api from '../api';
 
 const eventTypes = ['Wedding', 'CorporateEvent', 'Birthday'];
 
@@ -27,7 +28,7 @@ const EventPlanForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('http://localhost:9000/event-plans', formData, {
+            const response = await api.post('/event-plans', formData, {
                 headers: { 'Content-Type': 'application/json' },
             });
 

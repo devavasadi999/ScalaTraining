@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import AddTaskModal from './AddTaskModal';
 import { Box, Typography, Button, Grid, Card, CardContent } from '@mui/material';
+import api from '../api';
 
 const EventPlanDetails = () => {
     const { id } = useParams(); // Event Plan ID
@@ -13,7 +14,7 @@ const EventPlanDetails = () => {
 
     const fetchEventPlan = async () => {
         try {
-            const response = await axios.get(`http://localhost:9000/event-plans/${id}`);
+            const response = await api.get(`/event-plans/${id}`);
             setEventPlan(response.data.eventPlan);
         } catch (error) {
             console.error('Error fetching event plan:', error);
@@ -22,7 +23,7 @@ const EventPlanDetails = () => {
 
     const fetchTasks = async () => {
         try {
-            const response = await axios.get(`http://localhost:9000/task-assignments/event-plan/${id}`);
+            const response = await api.get(`/task-assignments/event-plan/${id}`);
             setTasks(response.data);
         } catch (error) {
             console.error('Error fetching tasks:', error);

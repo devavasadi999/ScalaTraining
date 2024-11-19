@@ -9,6 +9,7 @@ import {
     Grid,
 } from '@mui/material';
 import { Link } from 'react-router-dom';
+import api from '../api';
 
 const EventPlanList = () => {
     const [eventPlans, setEventPlans] = useState([]);
@@ -16,7 +17,7 @@ const EventPlanList = () => {
     // Fetch event plans from the backend
     const fetchEventPlans = async () => {
         try {
-            const response = await axios.get('http://localhost:9000/event-plans');
+            const response = await api.get('/event-plans');
             setEventPlans(response.data || []);
         } catch (error) {
             console.error('Error fetching event plans:', error);

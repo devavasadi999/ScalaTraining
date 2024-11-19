@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Box, Button, Typography, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import api from '../api';
 
 const HomePage = () => {
     const navigate = useNavigate();
@@ -11,7 +12,7 @@ const HomePage = () => {
     useEffect(() => {
         const fetchServiceTeams = async () => {
             try {
-                const response = await axios.get('http://localhost:9000/serviceTeams');
+                const response = await api.get('/serviceTeams');
                 setServiceTeams(response.data);
             } catch (error) {
                 console.error('Error fetching service teams:', error);

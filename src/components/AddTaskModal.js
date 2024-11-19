@@ -10,6 +10,7 @@ import {
     MenuItem,
     Grid,
 } from '@mui/material';
+import api from '../api';
 
 const AddTaskModal = ({ open, onClose, onSuccess, eventPlanId }) => {
     const [serviceTeams, setServiceTeams] = useState([]);
@@ -25,7 +26,7 @@ const AddTaskModal = ({ open, onClose, onSuccess, eventPlanId }) => {
 
     const fetchServiceTeams = async () => {
         try {
-            const response = await axios.get('http://localhost:9000/serviceTeams');
+            const response = await api.get('/serviceTeams');
             setServiceTeams(response.data);
         } catch (error) {
             console.error('Error fetching service teams:', error);
@@ -34,7 +35,7 @@ const AddTaskModal = ({ open, onClose, onSuccess, eventPlanId }) => {
 
     const fetchTaskTemplates = async (serviceTeamId) => {
         try {
-            const response = await axios.get(`http://localhost:9000/taskTemplates/serviceTeam/${serviceTeamId}`);
+            const response = await api.get(`/taskTemplates/serviceTeam/${serviceTeamId}`);
             setTaskTemplates(response.data);
         } catch (error) {
             console.error('Error fetching task templates:', error);
@@ -75,7 +76,7 @@ const AddTaskModal = ({ open, onClose, onSuccess, eventPlanId }) => {
                 event_plan_id: parseInt(eventPlanId, 10), // Ensure it's an integer
             };
 
-            const response = await axios.post('http://localhost:9000/task-assignments', payload, {
+            const response = await api.post('/task-assignments', payload, {
                 headers: { 'Content-Type': 'application/json' },
             });
 

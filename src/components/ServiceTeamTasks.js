@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Box, Typography, Grid, Card, CardContent, Button } from '@mui/material';
+import api from '../api';
 
 const ServiceTeamTasks = () => {
     const [searchParams] = useSearchParams();
@@ -13,7 +14,7 @@ const ServiceTeamTasks = () => {
     useEffect(() => {
         const fetchServiceTeam = async () => {
             try {
-                const response = await axios.get(`http://localhost:9000/serviceTeams/${serviceTeamId}`);
+                const response = await api.get(`/serviceTeams/${serviceTeamId}`);
                 setServiceTeamName(response.data.name);
             } catch (error) {
                 console.error('Error fetching service team details:', error);
@@ -22,8 +23,8 @@ const ServiceTeamTasks = () => {
 
         const fetchTasks = async () => {
             try {
-                const response = await axios.get(
-                    `http://localhost:9000/task-assignments/service-team/${serviceTeamId}`
+                const response = await api.get(
+                    `/task-assignments/service-team/${serviceTeamId}`
                 );
                 setTasks(response.data);
             } catch (error) {

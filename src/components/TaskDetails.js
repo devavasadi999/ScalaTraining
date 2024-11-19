@@ -14,6 +14,7 @@ import {
     InputLabel,
 } from '@mui/material';
 import RaiseIssueModal from './RaiseIssueModal';
+import api from '../api';
 
 const TaskDetails = () => {
     const { id } = useParams(); // Task Assignment ID
@@ -28,7 +29,7 @@ const TaskDetails = () => {
     // Fetch Task Details
     const fetchTaskDetails = async () => {
         try {
-            const response = await axios.get(`http://localhost:9000/task-assignments/${id}`);
+            const response = await api.get(`/task-assignments/${id}`);
             const data = response.data;
             setTaskDetails({
                 taskAssignment: data.task_assignment,
@@ -45,7 +46,7 @@ const TaskDetails = () => {
     // Fetch Task Issues
     const fetchTaskIssues = async () => {
         try {
-            const response = await axios.get(`http://localhost:9000/taskIssues/taskAssignment/${id}`);
+            const response = await api.get(`/taskIssues/taskAssignment/${id}`);
             setIssues(response.data.map((issue) => issue.task_issue));
         } catch (error) {
             console.error('Error fetching task issues:', error);
@@ -60,7 +61,7 @@ const TaskDetails = () => {
     // Handle Issue Resolution
     const handleResolveIssue = async (issueId) => {
         try {
-            await axios.patch(`http://localhost:9000/taskIssues/${issueId}`, { status: 'Resolved' });
+            await api.patch(`/taskIssues/${issueId}`, { status: 'Resolved' });
             fetchTaskIssues(); // Refresh issues after resolving
         } catch (error) {
             console.error('Error resolving issue:', error);
@@ -70,7 +71,7 @@ const TaskDetails = () => {
     // Handle Status Change
     const handleStatusChange = async (newStatus) => {
         try {
-            await axios.patch(`http://localhost:9000/task-assignments/${id}`, { status: newStatus });
+            await api.patch(`/task-assignments/${id}`, { status: newStatus });
             setStatus(newStatus);
             fetchTaskDetails(); // Refresh task details
         } catch (error) {

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Modal, Box, TextField, Button, Typography } from '@mui/material';
+import api from '../api';
 
 const RaiseIssueModal = ({ open, onClose, onSuccess, taskAssignmentId }) => {
     const [problem, setProblem] = useState('');
@@ -13,7 +14,7 @@ const RaiseIssueModal = ({ open, onClose, onSuccess, taskAssignmentId }) => {
         }
 
         try {
-            await axios.post('http://localhost:9000/taskIssues', {
+            await api.post('/taskIssues', {
                 taskAssignmentId: parseInt(taskAssignmentId),
                 problem,
                 status: 'Pending'
