@@ -1,29 +1,23 @@
-# Use an official lightweight Scala and SBT image as a parent image
-FROM hseeberger/scala-sbt:11.0.13_1.6.1_2.13.7 as build
+# Start with an official OpenJDK image
+FROM openjdk:17-jdk-slim
 
-# Set the working directory in the container
+# Install sbt
+RUN apt-get update && apt-get install -y curl gnupg && \
+    echo "deb https://repo.scala-sbt.org/scalasbt/debian all main" > /etc/apt/sources.list.d/sbt.list && \
+    curl -sL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x99e82a75642ac823" | apt-key add && \
+    apt-get update && apt-get install -y sbt
+
+# Set the working directory
 WORKDIR /app
 
-# Copy the current directory contents into the container at /app
-COPY . /app
+# Copy the project files
+COPY . .
 
-# Compile and package the application
-RUN sbt clean compile stage
+# Pre-fetch dependencies to speed up builds
+RUN sbt update
 
-# Use the OpenJDK image for running the application
-FROM openjdk:11-jre-slim
-
-# Copy the binary files from the previous stage
-COPY --from=build /app/target/universal/stage /app
-
-# Set the working directory in the container
-WORKDIR /app
-
-# Make port 9000 available to the world outside this container
+# Expose the application port (if necessary, e.g., for HTTP servers)
 EXPOSE 9000
 
-# Set environment variables to be used inside the container
-ENV KAFKA_BROKERS=""
-
-# Run the binary script when the container launches
-CMD ./bin/akka-stream-http-kafka-producer
+# Run the application
+CMD ["sbt", "run"]
