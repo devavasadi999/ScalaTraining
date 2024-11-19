@@ -5,6 +5,7 @@ import spray.json._
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import services.TimeZoneConversion
 
 // Custom JSON format for LocalDateTime
 object LocalDateTimeJsonProtocol extends DefaultJsonProtocol {
@@ -75,7 +76,7 @@ class MessageProcessorActor extends Actor {
                         |Please prepare accordingly.
           """.stripMargin
 
-          ("Task Assignment Notification", body, "Fixed", List(LocalDateTime.now()))
+          ("Task Assignment Notification", body, "Fixed", List(TimeZoneConversion.getCurrentISTLocalDateTime()))
 
         case "PreparationReminders" =>
           val taskAssignment = message.fields("task_assignment").asJsObject
@@ -196,7 +197,7 @@ class MessageProcessorActor extends Actor {
           """.stripMargin
 
           // Send only to the task manager
-          ("Issue Alert", body, "Fixed", List(LocalDateTime.now()))
+          ("Issue Alert", body, "Fixed", List(TimeZoneConversion.getCurrentISTLocalDateTime()))
 
         case "OverdueReminder" =>
           // Extract the equipment allocation details
@@ -223,7 +224,7 @@ class MessageProcessorActor extends Actor {
                         |Please return the equipment as soon as possible.""".stripMargin
 
           // Return tuple with message details
-          ("Overdue Reminder", body, "Fixed", List(LocalDateTime.now()))
+          ("Overdue Reminder", body, "Fixed", List(TimeZoneConversion.getCurrentISTLocalDateTime()))
 
         case "MaintenanceTeamNotification" =>
           // Extract the equipment repair details
@@ -247,7 +248,7 @@ class MessageProcessorActor extends Actor {
                         |Please review and proceed with the necessary actions.""".stripMargin
 
           // Return tuple with message details
-          ("New Repair Request", body, "Fixed", List(LocalDateTime.now()))
+          ("New Repair Request", body, "Fixed", List(TimeZoneConversion.getCurrentISTLocalDateTime()))
 
         case "InventoryTeamNotification" =>
           val notificationType = message.fields("notificationType").convertTo[String]
@@ -300,9 +301,9 @@ class MessageProcessorActor extends Actor {
           }
 
           // Return tuple with message details
-          (subject, body, "Fixed", List(LocalDateTime.now()))
+          (subject, body, "Fixed", List(TimeZoneConversion.getCurrentISTLocalDateTime()))
 
-        case _ => ("Unknown Notification", "No details available", "Fixed", List(LocalDateTime.now()))
+        case _ => ("Unknown Notification", "No details available", "Fixed", List(TimeZoneConversion.getCurrentISTLocalDateTime()))
       }
 
       println(frequencyValues)

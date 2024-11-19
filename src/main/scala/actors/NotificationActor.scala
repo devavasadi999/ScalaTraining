@@ -2,7 +2,9 @@ package actors
 
 import akka.actor.{Actor, Cancellable}
 import akka.actor.ActorSystem
+import services.TimeZoneConversion
 import spray.json._
+
 import scala.concurrent.duration._
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -67,7 +69,7 @@ class NotificationActor extends Actor {
   }
 
   private def calculateDelay(targetTime: LocalDateTime): FiniteDuration = {
-    val now = LocalDateTime.now()
+    val now = TimeZoneConversion.getCurrentISTLocalDateTime()
     val delayInSeconds = ChronoUnit.SECONDS.between(now, targetTime)
     delayInSeconds.seconds
   }
@@ -93,7 +95,7 @@ class NotificationActor extends Actor {
     cancellable = Some(context.system.scheduler.scheduleWithFixedDelay(initialDelay, interval) {
       new Runnable {
         def run(): Unit = {
-          val now = LocalDateTime.now()
+          val now = TimeZoneConversion.getCurrentISTLocalDateTime()
           if (now.isBefore(endTime) || now.isEqual(endTime)) {
             sendEmail(toEmails, subject, body)
           } else {
