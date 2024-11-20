@@ -43,7 +43,7 @@ class TaskAssignmentRepository @Inject()(dbConfigProvider: DatabaseConfigProvide
 
   def delete(id: Long): Future[Int] = db.run(taskAssignments.filter(_.id === id).delete)
 
-  def findByEventPlan(eventPlanId: Long): Future[Seq[(TaskAssignment, TaskTemplate, ServiceTeam, EventPlan)]] = {
+  def findByEventPlanWithDetails(eventPlanId: Long): Future[Seq[(TaskAssignment, TaskTemplate, ServiceTeam, EventPlan)]] = {
     val query = for {
       taskAssignment <- taskAssignments if taskAssignment.eventPlanId === eventPlanId
       taskTemplate <- taskTemplates if taskAssignment.taskTemplateId === taskTemplate.id
@@ -54,7 +54,7 @@ class TaskAssignmentRepository @Inject()(dbConfigProvider: DatabaseConfigProvide
     db.run(query.result)
   }
 
-  def findByServiceTeamId(serviceTeamId: Long): Future[Seq[(TaskAssignment, TaskTemplate, ServiceTeam, EventPlan)]] = {
+  def findByServiceTeamWithDetails(serviceTeamId: Long): Future[Seq[(TaskAssignment, TaskTemplate, ServiceTeam, EventPlan)]] = {
     val query = for {
       taskAssignment <- taskAssignments if taskAssignment.serviceTeamId === serviceTeamId
       taskTemplate <- taskTemplates if taskAssignment.taskTemplateId === taskTemplate.id

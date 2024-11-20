@@ -246,4 +246,88 @@ class EquipmentController @Inject()(
     }
   }
 
+  // Get All Employees
+  def getAllEmployees = Action.async {
+    employeeRepository.list().map { employees =>
+      Ok(Json.toJson(employees))
+    }
+  }
+
+  //Get Employee by ID
+  def getEmployeeById(id: Long) = Action.async {
+    employeeRepository.find(id).map {
+      case Some(employee) => Ok(Json.toJson(employee))
+      case None => NotFound("Employee not found")
+    }
+  }
+
+  //Get All Equipment Types
+  def getAllEquipmentTypes = Action.async {
+    equipmentTypeRepository.list().map { equipmentTypes =>
+      Ok(Json.toJson(equipmentTypes))
+    }
+  }
+
+  //Get Equipment Allocations for an Employee
+  def getEquipmentAllocationsForEmployee(employeeId: Long) = Action.async {
+    equipmentAllocationRepository.findByEmployee(employeeId).map { allocations =>
+      val response = allocations.map { case (allocation, equipment, equipmentType) =>
+        Json.obj(
+          "equipment_allocation" -> Json.toJson(allocation),
+          "equipment" -> Json.toJson(equipment),
+          "equipment_type" -> Json.toJson(equipmentType)
+        )
+      }
+      Ok(Json.toJson(response))
+    }
+  }
+
+  //Get Available Equipment for an Equipment Type
+  def getAvailableEquipments(equipmentTypeId: Long) = Action.async {
+    equipmentRepository.findAvailableByType(equipmentTypeId).map { equipments =>
+      val response = equipments.map { case (equipment, equipmentType) =>
+        Json.obj(
+          "equipment" -> Json.toJson(equipment),
+          "equipment_type" -> Json.toJson(equipmentType)
+        )
+      }
+      Ok(Json.toJson(response))
+    }
+  }
+
+  //Get Equipment Allocations for an Equipment ID
+  def getEquipmentAllocationsForEquipment(equipmentId: Long) = Action.async {
+    equipmentAllocationRepository.findByEquipment(equipmentId).map { allocations =>
+      val response = allocations.map { case (allocation, equipmentType, employee) =>
+        Json.obj(
+          "equipment_allocation" -> Json.toJson(allocation),
+          "equipment_type" -> Json.toJson(equipmentType),
+          "employee" -> Json.toJson(employee)
+        )
+      }
+      Ok(Json.toJson(response))
+    }
+  }
+
+  //Get equipment repairs for an equipment ID
+  def getEquipmentRepairsForEquipment(equipmentId: Long) = Action.async {
+    equipmentRepairRepository.findByEquipmentId(equipmentId).map { repairs =>
+      Ok(Json.toJson(repairs))
+    }
+  }
+
+  def getAllEquipmentRepairs = Action.async {
+    equipmentRepairRepository.findAllWithDetails.map { repairs =>
+      val response = repairs.map {
+        case (repair, equipment, equipmentType) =>
+          Json.obj(
+            "equipment_repair" -> Json.toJson(repair),
+            "equipment" -> Json.toJson(equipment),
+            "equipment_type" -> Json.toJson(equipmentType)
+          )
+      }
+      Ok(Json.toJson(response))
+    }
+  }
+
 }

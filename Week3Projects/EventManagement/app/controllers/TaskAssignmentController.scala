@@ -88,8 +88,17 @@ class TaskAssignmentController @Inject()(
 
   // 10) View Task Assignments for an Event Plan ID - GET
   def getTaskAssignments(eventPlanId: Long) = Action.async {
-    taskAssignmentRepository.findByEventPlan(eventPlanId).map { taskAssignments =>
-      Ok(Json.toJson(taskAssignments))
+    taskAssignmentRepository.findByEventPlanWithDetails(eventPlanId).map { taskAssignments =>
+      val response = taskAssignments.map {
+        case (taskAssignment, taskTemplate, serviceTeam, eventPlan) =>
+          Json.obj(
+            "task_assignment" -> Json.toJson(taskAssignment),
+            "task_template" -> Json.toJson(taskTemplate),
+            "service_team" -> Json.toJson(serviceTeam),
+            "event_plan" -> Json.toJson(eventPlan)
+          )
+      }
+      Ok(Json.toJson(response))
     }
   }
 
@@ -124,8 +133,17 @@ class TaskAssignmentController @Inject()(
   }
 
   def getTaskAssignmentsByServiceTeam(serviceTeamId: Long) = Action.async {
-    taskAssignmentRepository.findByServiceTeamId(serviceTeamId).map { taskAssignments =>
-      Ok(Json.toJson(taskAssignments)) // Serializes the result to JSON
+    taskAssignmentRepository.findByServiceTeamWithDetails(serviceTeamId).map { taskAssignments =>
+      val response = taskAssignments.map {
+        case (taskAssignment, taskTemplate, serviceTeam, eventPlan) =>
+          Json.obj(
+            "task_assignment" -> Json.toJson(taskAssignment),
+            "task_template" -> Json.toJson(taskTemplate),
+            "service_team" -> Json.toJson(serviceTeam),
+            "event_plan" -> Json.toJson(eventPlan)
+          )
+      }
+      Ok(Json.toJson(response))
     }.recover { case ex =>
       InternalServerError(s"An error occurred: ${ex.getMessage}")
     }

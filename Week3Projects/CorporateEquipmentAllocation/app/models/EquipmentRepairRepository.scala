@@ -32,8 +32,10 @@ class EquipmentRepairRepository @Inject()(dbConfigProvider: DatabaseConfigProvid
   }
 
   // List all repair requests for a specific equipment item
-  def listByEquipment(equipmentId: Long): Future[Seq[EquipmentRepair]] =
-    db.run(equipmentRepairs.filter(_.equipmentId === equipmentId).result)
+  def findByEquipmentId(equipmentId: Long): Future[Seq[EquipmentRepair]] = {
+    val query = equipmentRepairs.filter(_.equipmentId === equipmentId)
+    db.run(query.result)
+  }
 
   // List all repair requests by status
   def listByStatus(status: RepairStatus.RepairStatus): Future[Seq[EquipmentRepair]] =
@@ -58,4 +60,15 @@ class EquipmentRepairRepository @Inject()(dbConfigProvider: DatabaseConfigProvid
 
   // Delete a repair request by ID
   def delete(id: Long): Future[Int] = db.run(equipmentRepairs.filter(_.id === id).delete)
+
+  def findAllWithDetails: Future[Seq[(EquipmentRepair, Equipment, EquipmentType)]] = {
+    val query = for {
+      repair <- equipmentRepairs
+      equipment <- equipments if equipment.id === repair.equipmentId
+      equipmentType <- equipmentTypes if equipment.equipmentTypeId === equipmentType.id
+    } yield (repair, equipment, equipmentType)
+
+    db.run(query.result)
+  }
+
 }

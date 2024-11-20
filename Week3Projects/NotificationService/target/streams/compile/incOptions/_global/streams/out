@@ -1,0 +1,35 @@
+[0m[[0m[0mdebug[0m] [0m[0mCreated transactional ClassFileManager with tempDir = /Users/devavasadi/AkkaKafka/target/scala-2.13/classes.bak[0m
+[0m[[0m[0mdebug[0m] [0m[0mAbout to delete class files:[0m
+[0m[[0m[0mdebug[0m] [0m[0mWe backup class files:[0m
+[0m[[0m[0mdebug[0m] [0m[0mCreated transactional ClassFileManager with tempDir = /Users/devavasadi/AkkaKafka/target/scala-2.13/classes.bak[0m
+[0m[[0m[0mdebug[0m] [0m[0mAbout to delete class files:[0m
+[0m[[0m[0mdebug[0m] [0m[0mWe backup class files:[0m
+[0m[[0m[0mdebug[0m] [0m[0mRegistering generated classes:[0m
+[0m[[0m[0mdebug[0m] [0m[0m	ProcessedMessageJsonProtocol.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	ProcessedMessage.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	KafkaConsumerApp.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	NotificationActor.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	NotificationJsonProtocol$NotificationMessage$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	NotificationActor$$anon$2.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	EmailService$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	TimeZoneConversion.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	NotificationActor$$anonfun$receive$1.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	LocalDateTimeJsonProtocol.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	KafkaConsumerApp$delayedInit$body.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	KafkaProducerService.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	MessageProcessorActor.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	EmailService.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	TimeZoneConversion$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	ProcessedMessage$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	LocalDateTimeJsonProtocol$LocalDateTimeFormat$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	KafkaConsumerApp$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	LocalDateTimeJsonProtocol$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	MessageProcessorActor$$anonfun$receive$1.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	NotificationJsonProtocol$$anon$1.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	EnvLoader.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	NotificationJsonProtocol.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	NotificationJsonProtocol$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	ProcessedMessageJsonProtocol$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	EnvLoader$.class[0m
+[0m[[0m[0mdebug[0m] [0m[0m	NotificationJsonProtocol$NotificationMessage.class[0m
+[0m[[0m[0mdebug[0m] [0m[0mRemoving the temporary directory used for backing up class files: /Users/devavasadi/AkkaKafka/target/scala-2.13/classes.bak[0m

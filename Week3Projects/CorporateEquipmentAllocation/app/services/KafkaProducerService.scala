@@ -7,7 +7,7 @@ import java.util.Properties
 class KafkaProducerService() {
 
   private val props = new Properties()
-  props.put("bootstrap.servers", "localhost:9092")
+  props.put("bootstrap.servers", sys.env.getOrElse("KAFKA_BROKERS", "localhost:9092"))
   props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer")
   props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer")
 

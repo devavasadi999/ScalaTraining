@@ -22,6 +22,12 @@ WORKDIR /app
 # Make port 9000 available to the world outside this container
 EXPOSE 9000
 
+# Set environment variables to be used inside the container
+ENV KAFKA_BROKERS=""
+ENV DB_URL=""
+ENV DB_USER=""
+ENV DB_PASSWORD=""
+
 # Define environment variable
 ENV PLAY_HTTP_SECRET=thisisanapplicationsecretdonebyusingscala
 

@@ -21,7 +21,7 @@ PATCH   /equipment_repair/:equipmentRepairId   controllers.EquipmentController.u
 
 # Equipment Retrieval Routes
 
-# 5) Get all equipment of a specific type - GET
+# 5) Get all available equipment of a specific type - GET
 GET     /equipment/type/:equipmentTypeId          controllers.EquipmentController.getEquipmentsByType(equipmentTypeId: Long)
 
 # 6) Get allocation details by allocation ID - GET
@@ -32,3 +32,21 @@ GET     /equipment/:equipmentId                   controllers.EquipmentControlle
 
 # 8) Get repair request details by repair ID - GET
 GET     /equipment_repair/:equipmentRepairId      controllers.EquipmentController.getEquipmentRepairDetails(equipmentRepairId: Long)
+
+# Employee-related APIs
+GET     /employees                          controllers.EquipmentController.getAllEmployees
+GET     /employees/:id                      controllers.EquipmentController.getEmployeeById(id: Long)
+
+# EquipmentType-related APIs
+GET     /equipment-types                    controllers.EquipmentController.getAllEquipmentTypes
+
+# EquipmentAllocation-related APIs
+GET     /equipment-allocations/employee/:employeeId       controllers.EquipmentController.getEquipmentAllocationsForEmployee(employeeId: Long)
+GET     /equipment-allocations/equipment/:equipmentId     controllers.EquipmentController.getEquipmentAllocationsForEquipment(equipmentId: Long)
+
+# Equipment-related APIs
+GET     /equipments/available/:equipmentTypeId            controllers.EquipmentController.getAvailableEquipments(equipmentTypeId: Long)
+
+# Equipment repair APIs
+GET     /equipment-repair/equipment/:equipmentId      controllers.EquipmentController.getEquipmentRepairsForEquipment(equipmentId: Long)
+GET     /equipment-repairs                        controllers.EquipmentController.getAllEquipmentRepairs

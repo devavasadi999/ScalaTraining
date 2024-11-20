@@ -62,4 +62,16 @@ class EquipmentRepository @Inject()(dbConfigProvider: DatabaseConfigProvider)(im
 
     db.run(query)
   }
+
+  def findAvailableByType(equipmentTypeId: Long): Future[Seq[(Equipment, EquipmentType)]] = {
+    val query = for {
+      equipment <- equipments if equipment.equipmentTypeId === equipmentTypeId
+      notAllocated = !equipmentAllocations.filter(_.equipmentId === equipment.id).filter(_.status === AllocationStatus.Allocated).exists
+      if notAllocated
+      equipmentType <- equipmentTypes if equipment.equipmentTypeId === equipmentType.id
+    } yield (equipment, equipmentType)
+
+    db.run(query.result)
+  }
+
 }
