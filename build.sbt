@@ -28,5 +28,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-stream-kafka" % "6.0.0",
   "com.typesafe.akka" %% "akka-http" % "10.6.3",
   "com.typesafe.akka" %% "akka-http-spray-json" % "10.6.3",
-  "org.apache.kafka" %% "kafka" % "3.7.0" // Kafka client
+  "org.apache.kafka" %% "kafka" % "3.7.0",
+  "org.simplejavamail" % "simple-java-mail" % "7.8.0"
+  //"com.sun.mail" % "jakarta.mail" % "2.0.1"
 )

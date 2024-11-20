@@ -165,7 +165,7 @@ class MessageProcessorActor extends Actor {
           """.stripMargin
 
           // Add both service team and event manager emails
-          toEmails = toEmails ++ List("event_manager@example.com") // Add event manager email
+          toEmails = toEmails ++ List(System.getProperty("EVENT_MANAGER_EMAIL")) // Add event manager email
           ("Event Day Alert", body, "Fixed", List(endTime.minusHours(1)))
 
         case "IssueAlert" =>

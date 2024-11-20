@@ -10,6 +10,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import scala.concurrent.ExecutionContext
+import services.EmailService
 
 // Define JSON format for the Notification message structure
 object NotificationJsonProtocol extends DefaultJsonProtocol {
@@ -78,6 +79,12 @@ class NotificationActor extends Actor {
     println(s"Sending email to: ${toEmails.mkString(", ")}")
     println(s"Subject: $subject")
     println(s"Body: $body")
+
+    EmailService.sendEmail(
+      toEmails = toEmails,
+      subject = subject,
+      bodyText = body
+    )
   }
 
   private def scheduleRecurringEmail(
