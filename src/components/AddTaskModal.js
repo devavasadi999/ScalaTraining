@@ -123,7 +123,7 @@ const AddTaskModal = ({ open, onClose, onSuccess, eventPlanId }) => {
                         >
                             {taskTemplates.map((template) => (
                                 <MenuItem key={template.id} value={template.id}>
-                                    {template.description}
+                                    {template.name}
                                 </MenuItem>
                             ))}
                         </TextField>
