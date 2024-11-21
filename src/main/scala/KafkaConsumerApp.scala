@@ -1,4 +1,6 @@
-import actors.{MessageProcessorActor, NotificationActor}
+import actors.EquipmentAllocationActors.{EmployeeActor, InventoryTeamActor, MaintenanceTeamActor}
+import actors.EventManagementActors.{CateringTeamActor, DecorationsTeamActor, EntertainmentTeamActor, EventManagerActor, LogisticsTeamActor}
+import actors.NotificationActor
 import akka.Done
 import akka.actor.{ActorSystem, Props}
 import akka.kafka.scaladsl.Consumer
@@ -16,51 +18,51 @@ object KafkaConsumerApp extends App {
   // Load environment variables
   EnvLoader.loadEnv(".env")
 
-  implicit val system: ActorSystem = ActorSystem("KafkaConsumerSystem1")
+  implicit val system: ActorSystem = ActorSystem("KafkaConsumerSystem")
   implicit val ec: ExecutionContext = system.dispatcher
 
-  // Define actors for processing messages
-  val messageProcessor = system.actorOf(Props[MessageProcessorActor], "messageProcessor")
+  // NotificationActor for sending notifications
   val notificationActor = system.actorOf(Props[NotificationActor], "notificationActor")
 
   val kafkaBrokers = System.getProperty("KAFKA_BROKERS")
-  println(s"Kafka brokers: ${kafkaBrokers}")
+  println(s"Kafka brokers: $kafkaBrokers")
 
   // Kafka consumer settings
   val consumerSettings = ConsumerSettings(system, new StringDeserializer, new StringDeserializer)
     .withBootstrapServers(kafkaBrokers)
-    .withGroupId("kafkaConsumerAppGroup4") // Adding a unique group ID
-    //.withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
+    .withGroupId("kafkaConsumerAppGroup") // Unique group ID
     .withProperty(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "30000")
     .withProperty(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, "300000")
 
-  // Start a consumer for the "rawNotification" topic
-  val rawNotificationControl = Consumer
-    .plainSource(consumerSettings, Subscriptions.topics("rawNotification"))
-    .map(record => record.value()) // Extract message value from Kafka record
-    .toMat(Sink.foreach(messageProcessor ! _))(Keep.both)
-    .mapMaterializedValue(DrainingControl[Done])
-    .run()
+  // Define topics for service teams
+  val allTopics = Map(
+    "catering_team_topic" -> system.actorOf(Props(new CateringTeamActor(notificationActor)), "cateringTeamActor"),
+    "entertainment_team_topic" -> system.actorOf(Props(new EntertainmentTeamActor(notificationActor)), "entertainmentTeamActor"),
+    "decorations_team_topic" -> system.actorOf(Props(new DecorationsTeamActor(notificationActor)), "decorationsTeamActor"),
+    "logistics_team_topic" -> system.actorOf(Props(new LogisticsTeamActor(notificationActor)), "logisticsTeamActor"),
+    "event_manager_topic" -> system.actorOf(Props(new EventManagerActor(notificationActor)), "eventManagerActor"),
+    "employee_topic" -> system.actorOf(Props(new EmployeeActor(notificationActor)), "employeeActor"),
+    "inventory_team_topic" -> system.actorOf(Props(new InventoryTeamActor(notificationActor)), "inventoryTeamActor"),
+    "maintenance_team_topic" -> system.actorOf(Props(new MaintenanceTeamActor(notificationActor)), "maintenanceTeamActor")
+  )
 
-  // Start a consumer for the "processedNotification" topic
-  val processedNotificationControl = Consumer
-    .plainSource(consumerSettings, Subscriptions.topics("processedNotification"))
-    .map(record => record.value()) // Extract message value from Kafka record
-    .toMat(Sink.foreach(notificationActor ! _))(Keep.both)
-    .mapMaterializedValue(DrainingControl[Done])
-    .run()
+  // Start consumers for each service team topic
+  val controls = allTopics.map { case (topic, actor) =>
+    Consumer
+      .plainSource(consumerSettings, Subscriptions.topics(topic))
+      .map(record => record.value()) // Extract message value
+      .toMat(Sink.foreach(actor ! _))(Keep.both)
+      .mapMaterializedValue(DrainingControl[Done])
+      .run()
+  }
 
   println("Kafka Consumers are running and listening for messages...")
 
   // Graceful shutdown hook
   sys.addShutdownHook {
     println("Shutting down Kafka consumers...")
-    val shutdownFuture: Future[Done] = for {
-      _ <- rawNotificationControl.drainAndShutdown()
-      _ <- processedNotificationControl.drainAndShutdown()
-    } yield Done
-
-    shutdownFuture.onComplete { _ =>
+    val shutdownFutures = controls.map(_.drainAndShutdown())
+    Future.sequence(shutdownFutures).onComplete { _ =>
       println("Kafka consumers stopped. Terminating the ActorSystem...")
       system.terminate()
     }
