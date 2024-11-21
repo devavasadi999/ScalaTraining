@@ -32,7 +32,6 @@ class TaskIssueController @Inject()(
               // Create the message with TaskIssue and related details
               val message = Json.obj(
                 "message_type" -> "IssueAlert",
-                "to_emails" -> Json.arr("event.manager@example.com"), // Replace with actual email(s)
                 "task_issue" -> Json.toJson(createdIssue),
                 "task_assignment" -> Json.toJson(taskAssignment),
                 "task_template" -> Json.toJson(taskTemplate),
@@ -40,7 +39,7 @@ class TaskIssueController @Inject()(
                 "event_plan" -> Json.toJson(eventPlan)
               )
               // Send the notification to Kafka
-              kafkaProducer.send("rawNotification", message.toString)
+              kafkaProducer.send("event_manager_topic", message.toString)
               Future.successful(Created(Json.toJson(createdIssue)))
 
             case None =>

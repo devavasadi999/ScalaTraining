@@ -29,7 +29,6 @@ class TaskAssignmentController @Inject()(
         Future.successful(BadRequest("Invalid JSON provided"))
       },
       taskAssignment => {
-        // Ensure the status is set to TODO if not provided
         val updatedTaskAssignment = taskAssignment.copy(
           status = taskAssignment.status match {
             case AssignmentStatus.UNKNOWN => AssignmentStatus.TODO
@@ -37,19 +36,15 @@ class TaskAssignmentController @Inject()(
           }
         )
 
-        // Fetch the service team email, task template, service team, and event plan
         val fetchDetails = for {
-          emailOpt <- serviceTeamRepository.findEmailById(updatedTaskAssignment.serviceTeamId)
           taskTemplateOpt <- taskTemplateRepository.find(updatedTaskAssignment.taskTemplateId)
           serviceTeamOpt <- serviceTeamRepository.find(updatedTaskAssignment.serviceTeamId)
           eventPlanOpt <- eventPlanRepository.find(updatedTaskAssignment.eventPlanId)
-        } yield (emailOpt, taskTemplateOpt, serviceTeamOpt, eventPlanOpt)
+        } yield (taskTemplateOpt, serviceTeamOpt, eventPlanOpt)
 
         fetchDetails.flatMap {
-          case (Some(email), Some(taskTemplate), Some(serviceTeam), Some(eventPlan)) =>
-            // Add the task assignment to the repository
+          case (Some(taskTemplate), Some(serviceTeam), Some(eventPlan)) =>
             taskAssignmentRepository.add(updatedTaskAssignment).map { createdAssignment =>
-              // Define your different message types
               val notificationTypes = Seq(
                 "TaskAssignmentNotification",
                 "PreparationReminders",
@@ -57,21 +52,27 @@ class TaskAssignmentController @Inject()(
                 "EventDayAlert"
               )
 
-              // Create the base message object
               val baseMessage = Json.obj(
-                "to_emails" -> Json.arr(email),
                 "task_assignment" -> Json.toJson(createdAssignment),
                 "task_template" -> Json.toJson(taskTemplate),
                 "service_team" -> Json.toJson(serviceTeam),
                 "event_plan" -> Json.toJson(eventPlan)
               )
 
-              // Iterate over each notification type and modify `messageType` before sending
+              // Determine the topic based on the service team name
+              val serviceTeamTopic = serviceTeam.name.toLowerCase.replace(" ", "_") + "_topic"
+              val eventManagerTopic = "event_manager_topic"
+
               notificationTypes.foreach { notificationType =>
                 val message = baseMessage + ("message_type" -> Json.toJson(notificationType))
 
-                // Send the modified message to Kafka
-                kafkaProducer.send("rawNotification", message.toString)
+                // Send EventDayAlert to both topics
+                if (notificationType == "EventDayAlert") {
+                  kafkaProducer.send(serviceTeamTopic, message.toString)
+                  kafkaProducer.send(eventManagerTopic, message.toString)
+                } else {
+                  kafkaProducer.send(serviceTeamTopic, message.toString)
+                }
               }
 
               Created(Json.toJson(createdAssignment))
@@ -79,7 +80,7 @@ class TaskAssignmentController @Inject()(
 
           case _ =>
             Future.successful(
-              BadRequest("Failed to fetch necessary details (email, task template, service team, or event plan).")
+              BadRequest("Failed to fetch necessary details (task template, service team, or event plan).")
             )
         }
       }
