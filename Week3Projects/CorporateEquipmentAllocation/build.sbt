@@ -14,7 +14,9 @@ libraryDependencies ++= Seq(
   "org.playframework" %% "play-slick"            % "6.1.0",
   "org.playframework" %% "play-slick-evolutions" % "6.1.0",
   "mysql" % "mysql-connector-java" % "8.0.26",
-  "org.apache.kafka" % "kafka-clients" % "2.8.0" // Add Kafka clients dependency
+  "org.apache.kafka" % "kafka-clients" % "2.8.0", // Add Kafka clients dependency
+  "com.auth0" % "java-jwt" % "4.3.0", // Java JWT library
+  "org.mindrot" % "jbcrypt" % "0.4"
 )
 libraryDependencies += ws
 

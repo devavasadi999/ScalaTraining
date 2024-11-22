@@ -32,3 +32,7 @@ GET     /taskIssues/eventPlan/:eventPlanId         controllers.TaskIssueControll
 GET     /taskIssues/serviceTeam/:serviceTeamId     controllers.TaskIssueController.getTaskIssuesByServiceTeam(serviceTeamId: Long)
 GET     /taskIssues/taskAssignment/:taskAssignmentId controllers.TaskIssueController.getTaskIssuesByTaskAssignment(taskAssignmentId: Long)
 GET     /taskIssues/:id                          controllers.TaskIssueController.getTaskIssueById(id: Long)
+
+# Login and Logout
+POST    /login                        controllers.AuthenticationController.login
+POST    /logout                       controllers.AuthenticationController.logout

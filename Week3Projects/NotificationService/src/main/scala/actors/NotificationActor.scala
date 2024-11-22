@@ -2,7 +2,7 @@ package actors
 
 import akka.actor.{Actor, Cancellable}
 import akka.actor.ActorSystem
-import services.TimeZoneConversion
+import services.{Email, EmailService, TimeZoneConversion}
 import spray.json._
 
 import scala.concurrent.duration._
@@ -10,7 +10,6 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import scala.concurrent.ExecutionContext
-import services.EmailService
 
 // Define JSON format for the Notification message structure
 object NotificationJsonProtocol extends DefaultJsonProtocol {
@@ -23,15 +22,7 @@ object NotificationJsonProtocol extends DefaultJsonProtocol {
     }
   }
 
-  case class NotificationMessage(
-                                  toEmails: Seq[String],
-                                  subject: String,
-                                  body: String,
-                                  frequencyType: String,
-                                  frequencyValues: List[LocalDateTime]
-                                )
-
-  implicit val notificationMessageFormat: RootJsonFormat[NotificationMessage] = jsonFormat5(NotificationMessage)
+  implicit val notificationMessageFormat: RootJsonFormat[Email] = jsonFormat5(Email)
 }
 
 import NotificationJsonProtocol._
@@ -40,11 +31,9 @@ class NotificationActor extends Actor {
   implicit val ec: ExecutionContext = context.system.dispatcher
 
   override def receive: Receive = {
-    case messageJson: String =>
-      // Parse JSON using Spray JSON
-      val message = messageJson.parseJson.convertTo[NotificationMessage]
+    case message: Email =>
       println(s"Received at NotificationActor:${message}")
-      val NotificationMessage(toEmails, subject, body, frequencyType, frequencyValues) = message
+      val Email(toEmails, subject, body, frequencyType, frequencyValues) = message
 
       frequencyType match {
         case "Fixed" =>
