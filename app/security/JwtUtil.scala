@@ -14,7 +14,7 @@ object RequestKeys {
 }
 
 object JwtUtil {
-  private val secretKey = "deva-jwt-key" // Store securely in environment variables
+  private val secretKey = sys.env.getOrElse("JWT_SECRET_KEY", "")
   private val algorithm = Algorithm.HMAC256(secretKey)
   private val issuer = "play-name"
 
