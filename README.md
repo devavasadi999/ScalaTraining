@@ -3,7 +3,7 @@ Repo related to scala training
 
 Both backend and frontend of EventManagement and CorporateEquipmentAllocation are deployed to VM.
 
-Week3 Project will be found in folder named "Week3Projects"
+Week3 Projects will be found in folder named "Week3Projects"
 It contains the following:
 
 1) EventMangement folder contains EventManagement project.
@@ -13,6 +13,7 @@ It contains the following:
 5) EquipmentAllocationUI folder contains react UI code of EquipmentAllocation project.
 6) Week3ProjectsDocumentation file contains screenshots of working postman requests, notification emails printed on application terminal, UI screenshots and email screenshots.
 7) Flow, Model and PPTs of both the projects.
+8) Aligned Participant Teja's projects.
 
 
 Day wise Tasks will be found in Tasks folder.
