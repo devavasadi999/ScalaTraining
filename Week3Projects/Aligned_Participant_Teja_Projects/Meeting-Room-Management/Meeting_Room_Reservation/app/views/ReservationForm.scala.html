@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reservation Form</title>
+    <style>
+        body {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          margin: 0;
+          font-family: Arial, sans-serif;
+          background-color: #f0f0f5;
+        }
+        .form-container {
+          background-color: #ffffff;
+          border: 1px solid #ccc;
+          border-radius: 10px;
+          padding: 20px;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+          max-width: 400px;
+          width: 100%;
+        }
+        .form-container h2 {
+          text-align: center;
+          margin-bottom: 20px;
+        }
+        .form-group {
+          margin-bottom: 15px;
+        }
+        .form-group label {
+          display: block;
+          margin-bottom: 5px;
+        }
+        .form-group input {
+          width: 100%;
+          padding: 8px;
+          border: 1px solid #ccc;
+          border-radius: 5px;
+          box-sizing: border-box;
+        }
+        .form-container button {
+          width: 100%;
+          padding: 10px;
+          background-color: #007bff;
+          color: white;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+          font-size: 16px;
+        }
+        .form-container button:hover {
+          background-color: #0056b3;
+        }
+    </style>
+  </head>
+  <body>
+    <div class="form-container">
+      <h2>Reservation Form</h2>
+      <form id="reservationForm">
+        <div class="form-group">
+          <label for="roomId">Room ID:</label>
+          <input type="number" id="roomId" name="roomId" required>
+        </div>
+        <div class="form-group">
+          <label for="employeeName">Employee Name:</label>
+          <input type="text" id="employeeName" name="employeeName" required>
+        </div>
+        <div class="form-group">
+          <label for="employeeMail">Employee Email:</label>
+          <input type="email" id="employeeMail" name="employeeMail" required>
+        </div>
+        <div class="form-group">
+          <label for="department">Department:</label>
+          <input type="text" id="department" name="department" required>
+        </div>
+        <div class="form-group">
+          <label for="purpose">Purpose:</label>
+          <input type="text" id="purpose" name="purpose" required>
+        </div>
+        <div class="form-group">
+          <label for="startTime">Start Time:</label>
+          <input type="datetime-local" id="startTime" name="startTime" required>
+        </div>
+        <div class="form-group">
+          <label for="endTime">End Time:</label>
+          <input type="datetime-local" id="endTime" name="endTime" required>
+        </div>
+        <div class="form-group">
+          <label for="createdBy">Created By:</label>
+          <input type="number" id="createdBy" name="createdBy" required>
+        </div>
+        <button type="submit">Submit</button>
+      </form>
+    </div>
+    <script>
+        document.getElementById('reservationForm').addEventListener('submit', function(event) {
+          event.preventDefault(); // Prevent form from reloading the page
+
+          const formData = new FormData(event.target);
+          const payload = {
+            roomId: parseInt(formData.get('roomId')),
+            employeeName: formData.get('employeeName'),
+            employeeMail: formData.get('employeeMail'),
+            department: formData.get('department'),
+            purpose: formData.get('purpose'),
+            startTime: formData.get('startTime'),
+            endTime: formData.get('endTime'),
+            createdBy: parseInt(formData.get('createdBy'))
+          };
+
+          // Send the formatted JSON payload via an AJAX request
+          fetch('/api/reserve', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+          })
+                  .then(response => response.json())
+                  .then(data => {
+                    console.log('Success:', data);
+                  })
+                  .catch((error) => {
+                    console.error('Error:', error);
+                  });
+        });
+    </script>
+  </body>
+</html>
