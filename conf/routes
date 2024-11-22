@@ -50,3 +50,7 @@ GET     /equipments/available/:equipmentTypeId            controllers.EquipmentC
 # Equipment repair APIs
 GET     /equipment-repair/equipment/:equipmentId      controllers.EquipmentController.getEquipmentRepairsForEquipment(equipmentId: Long)
 GET     /equipment-repairs                        controllers.EquipmentController.getAllEquipmentRepairs
+
+# Login and Logout
+POST    /login                        controllers.AuthenticationController.login
+POST    /logout                       controllers.AuthenticationController.logout

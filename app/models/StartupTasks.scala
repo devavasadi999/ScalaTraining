@@ -60,13 +60,12 @@ class StartupTasks @Inject()(dbInitializer: DatabaseInitializer,
           // Create and send an overdue reminder message to the employee's email
           val message = Json.obj(
             "message_type" -> "OverdueReminder",
-            "to_emails" -> Json.arr(employee.email),
             "equipmentAllocation" -> Json.toJson(allocation),
             "equipment" -> Json.toJson(equipment),
             "equipmentType" -> Json.toJson(equipmentType),
             "employee" -> Json.toJson(employee)
           )
-          kafkaProducer.send("rawNotification", message.toString)
+          kafkaProducer.send("employee_topic", message.toString)
           println(s"Overdue reminder sent to ${employee.email} for equipment allocation: $allocation")
           Future.successful(())
         }
