@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import {
     Modal,
     Box,
@@ -16,8 +15,23 @@ const ReturnEquipmentModal = ({ open, onClose, onSuccess, equipmentAllocation })
     const [serviceDescription, setServiceDescription] = useState(''); // Service description
     const [error, setError] = useState('');
 
+    const getAuthorizationHeaders = () => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            console.error('No token found. User might not be logged in.');
+            return null;
+        }
+        return { Authorization: `Bearer ${token}` };
+    };
+
     const handleSubmit = async () => {
         try {
+            const headers = getAuthorizationHeaders();
+            if (!headers) {
+                setError('Unauthorized. Please log in.');
+                return;
+            }
+
             // Prepare data for the return request
             const payload = {
                 status: 'Returned',
@@ -27,7 +41,7 @@ const ReturnEquipmentModal = ({ open, onClose, onSuccess, equipmentAllocation })
             await api.patch(
                 `/equipment_allocation/${equipmentAllocation.equipment_allocation.id}`,
                 payload,
-                { headers: { 'Content-Type': 'application/json' } }
+                { headers: { ...headers, 'Content-Type': 'application/json' } }
             );
 
             // If service is required, create a repair record
@@ -40,7 +54,7 @@ const ReturnEquipmentModal = ({ open, onClose, onSuccess, equipmentAllocation })
                 await api.post(
                     '/equipment_repair',
                     repairPayload,
-                    { headers: { 'Content-Type': 'application/json' } }
+                    { headers: { ...headers, 'Content-Type': 'application/json' } }
                 );
             }
 

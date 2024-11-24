@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { Box, Typography, Grid, Card, CardContent, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
@@ -11,7 +10,17 @@ const EmployeeList = () => {
     useEffect(() => {
         const fetchEmployees = async () => {
             try {
-                const response = await api.get('/employees');
+                const token = localStorage.getItem('token'); // Retrieve token from localStorage
+                if (!token) {
+                    console.error('No token found. User might not be logged in.');
+                    return;
+                }
+
+                const response = await api.get('/employees', {
+                    headers: {
+                        Authorization: `Bearer ${token}`, // Include Authorization header
+                    },
+                });
                 setEmployees(response.data);
             } catch (error) {
                 console.error('Error fetching employees:', error);

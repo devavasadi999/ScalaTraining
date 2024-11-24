@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import { Box, Typography, Grid, Card, CardContent, Button } from '@mui/material';
 import ReturnEquipmentModal from './ReturnEquipmentModal';
@@ -15,7 +14,17 @@ const EmployeeDetails = () => {
     // Fetch employee details
     const fetchEmployee = async () => {
         try {
-            const response = await api.get(`/employees/${id}`);
+            const token = localStorage.getItem('token'); // Retrieve token from localStorage
+            if (!token) {
+                console.error('No token found. User might not be logged in.');
+                return;
+            }
+
+            const response = await api.get(`/employees/${id}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`, // Include Authorization header
+                },
+            });
             setEmployee(response.data);
         } catch (error) {
             console.error('Error fetching employee details:', error);
@@ -25,7 +34,17 @@ const EmployeeDetails = () => {
     // Fetch equipment allocations for the employee
     const fetchAllocations = async () => {
         try {
-            const response = await api.get(`/equipment-allocations/employee/${id}`);
+            const token = localStorage.getItem('token'); // Retrieve token from localStorage
+            if (!token) {
+                console.error('No token found. User might not be logged in.');
+                return;
+            }
+
+            const response = await api.get(`/equipment-allocations/employee/${id}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`, // Include Authorization header
+                },
+            });
             setAllocations(response.data);
         } catch (error) {
             console.error('Error fetching equipment allocations:', error);

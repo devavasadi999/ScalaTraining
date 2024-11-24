@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { Box, Typography, Grid, Card, CardContent, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
@@ -8,10 +7,22 @@ const EquipmentTypeList = () => {
     const [equipmentTypes, setEquipmentTypes] = useState([]);
     const navigate = useNavigate();
 
+    const getAuthorizationHeaders = () => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            console.error('No token found. User might not be logged in.');
+            return null;
+        }
+        return { Authorization: `Bearer ${token}` };
+    };
+
     useEffect(() => {
         const fetchEquipmentTypes = async () => {
             try {
-                const response = await api.get('/equipment-types');
+                const headers = getAuthorizationHeaders();
+                if (!headers) return;
+
+                const response = await api.get('/equipment-types', { headers });
                 setEquipmentTypes(response.data);
             } catch (error) {
                 console.error('Error fetching equipment types:', error);

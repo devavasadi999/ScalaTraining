@@ -1,10 +1,18 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Box, Typography, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import api from '../api';
 
 const ReceptionStaff = () => {
     const navigate = useNavigate();
+
+    useEffect(() => {
+        // Check if the token exists in localStorage
+        const token = localStorage.getItem('token');
+        if (!token) {
+            // Redirect to the login page if the token is missing
+            navigate('/');
+        }
+    }, [navigate]);
 
     return (
         <Box sx={{ textAlign: 'center', padding: 4 }}>

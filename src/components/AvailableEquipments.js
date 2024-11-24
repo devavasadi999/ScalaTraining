@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { Box, Typography, Grid, Card, CardContent, Button } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api';
@@ -12,7 +11,17 @@ const AvailableEquipments = () => {
     useEffect(() => {
         const fetchEquipments = async () => {
             try {
-                const response = await api.get(`/equipments/available/${id}`);
+                const token = localStorage.getItem('token'); // Retrieve token from localStorage
+                if (!token) {
+                    console.error('No token found. User might not be logged in.');
+                    return;
+                }
+
+                const response = await api.get(`/equipments/available/${id}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`, // Include Authorization header
+                    },
+                });
                 setEquipments(response.data);
             } catch (error) {
                 console.error('Error fetching available equipment:', error);

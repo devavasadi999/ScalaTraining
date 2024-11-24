@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { Box, Typography, Grid, Card, CardContent, Button, Select, MenuItem } from '@mui/material';
 import api from '../api';
 
@@ -7,10 +6,22 @@ const MaintenanceTeam = () => {
     const [repairRequests, setRepairRequests] = useState([]);
     const [statuses, setStatuses] = useState({}); // To track status changes for each repair
 
+    const getAuthorizationHeaders = () => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            console.error('No token found. User might not be logged in.');
+            return null;
+        }
+        return { Authorization: `Bearer ${token}` };
+    };
+
     // Fetch all repair requests with details
     const fetchRepairRequests = async () => {
         try {
-            const response = await api.get('/equipment-repairs');
+            const headers = getAuthorizationHeaders();
+            if (!headers) return;
+
+            const response = await api.get('/equipment-repairs', { headers });
             // Sort by ID
             const sortedRepairs = response.data.sort((a, b) => a.equipment_repair.id - b.equipment_repair.id);
             setRepairRequests(sortedRepairs);
@@ -22,9 +33,14 @@ const MaintenanceTeam = () => {
     // Handle status update
     const handleStatusChange = async (repairId, newStatus) => {
         try {
-            await api.patch(`/equipment_repair/${repairId}`, {
-                status: newStatus,
-            });
+            const headers = getAuthorizationHeaders();
+            if (!headers) return;
+
+            await api.patch(
+                `/equipment_repair/${repairId}`,
+                { status: newStatus },
+                { headers }
+            );
             setStatuses((prev) => ({ ...prev, [repairId]: newStatus }));
             fetchRepairRequests(); // Refresh the list
         } catch (error) {

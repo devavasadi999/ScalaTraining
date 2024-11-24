@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import {
     Box,
     Typography,
@@ -25,13 +24,25 @@ const EquipmentDetails = () => {
     const [repairs, setRepairs] = useState([]); // Equipment Repairs
     const [selectedEmployee, setSelectedEmployee] = useState(''); // Selected Employee for Allocation
     const [search, setSearch] = useState(''); // Employee Search
-    const [purpose, setPurpose] = useState(''); // Employee Search
+    const [purpose, setPurpose] = useState(''); // Purpose for Allocation
     const [expectedReturnDate, setExpectedReturnDate] = useState('');
+
+    const getAuthorizationHeaders = () => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            console.error('No token found. User might not be logged in.');
+            return null;
+        }
+        return { Authorization: `Bearer ${token}` };
+    };
 
     // Fetch Equipment Details
     const fetchEquipmentDetails = async () => {
         try {
-            const response = await api.get(`/equipment/${id}`);
+            const headers = getAuthorizationHeaders();
+            if (!headers) return;
+
+            const response = await api.get(`/equipment/${id}`, { headers });
             setEquipment(response.data);
         } catch (error) {
             console.error('Error fetching equipment details:', error);
@@ -41,7 +52,10 @@ const EquipmentDetails = () => {
     // Fetch Equipment Allocations
     const fetchAllocations = async () => {
         try {
-            const response = await api.get(`/equipment-allocations/equipment/${id}`);
+            const headers = getAuthorizationHeaders();
+            if (!headers) return;
+
+            const response = await api.get(`/equipment-allocations/equipment/${id}`, { headers });
             const sortedAllocations = response.data.sort((a, b) =>
                 new Date(a.equipment_allocation.allocationDate) - new Date(b.equipment_allocation.allocationDate)
             );
@@ -54,7 +68,10 @@ const EquipmentDetails = () => {
     // Fetch All Employees
     const fetchEmployees = async () => {
         try {
-            const response = await api.get('/employees');
+            const headers = getAuthorizationHeaders();
+            if (!headers) return;
+
+            const response = await api.get('/employees', { headers });
             setEmployees(response.data);
         } catch (error) {
             console.error('Error fetching employees:', error);
@@ -64,7 +81,10 @@ const EquipmentDetails = () => {
     // Fetch Equipment Repairs
     const fetchRepairs = async () => {
         try {
-            const response = await api.get(`/equipment-repair/equipment/${id}`);
+            const headers = getAuthorizationHeaders();
+            if (!headers) return;
+
+            const response = await api.get(`/equipment-repair/equipment/${id}`, { headers });
             setRepairs(response.data);
         } catch (error) {
             console.error('Error fetching equipment repairs:', error);
@@ -79,6 +99,9 @@ const EquipmentDetails = () => {
         }
 
         try {
+            const headers = getAuthorizationHeaders();
+            if (!headers) return;
+
             const payload = {
                 employee_id: parseInt(selectedEmployee),
                 equipment_id: parseInt(id),
@@ -86,7 +109,7 @@ const EquipmentDetails = () => {
                 expectedReturnDate, // Uses the date field value directly
             };
             await api.post('/equipment_allocation', payload, {
-                headers: { 'Content-Type': 'application/json' },
+                headers: { ...headers, 'Content-Type': 'application/json' },
             });
             alert('Equipment allocated successfully!');
             fetchAllocations(); // Refresh allocations
@@ -130,6 +153,7 @@ const EquipmentDetails = () => {
                         <strong>Description:</strong> {equipment.equipmentType.description}
                     </Typography>
 
+                    {/* Equipment Allocations */}
                     <Typography variant="h5" sx={{ marginTop: 4 }}>
                         Equipment Allocations
                     </Typography>
@@ -173,6 +197,7 @@ const EquipmentDetails = () => {
                         </Typography>
                     )}
 
+                    {/* Repair Records */}
                     <Typography variant="h5" sx={{ marginTop: 4 }}>
                         Repair Records
                     </Typography>
@@ -199,6 +224,7 @@ const EquipmentDetails = () => {
                         </Typography>
                     )}
 
+                    {/* Allocate Equipment */}
                     {!hasAllocated && !hasPendingRepairs && (
                         <Box sx={{ marginTop: 4 }}>
                             <Typography variant="h5" sx={{ marginBottom: 2 }}>
@@ -209,7 +235,7 @@ const EquipmentDetails = () => {
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: 2,
-                                    flexWrap: 'wrap', // Allows wrapping for smaller screens
+                                    flexWrap: 'wrap',
                                     maxWidth: 1000,
                                 }}
                             >
@@ -259,7 +285,7 @@ const EquipmentDetails = () => {
                                     onClick={handleAllocateEquipment}
                                     disabled={!selectedEmployee || !purpose.trim() || !expectedReturnDate}
                                     sx={{
-                                        height: 56, // Matches the height of the select and text input
+                                        height: 56,
                                         width: 250,
                                         flexShrink: 0,
                                     }}

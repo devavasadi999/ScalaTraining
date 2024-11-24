@@ -24,6 +24,7 @@ function App() {
           <Route path="/equipment-type/:id" element={<AvailableEquipments />} />
           <Route path="/equipment/:id" element={<EquipmentDetails />} />
             <Route path="/equipment-types" element={<EquipmentTypeList />} />
+            <Route path="*" element={<div>Page Not Found</div>} /> {/* Fallback route */}
         </Routes>
       </Router>
   );
