@@ -10,7 +10,7 @@ import slick.jdbc._
 
 object Role extends Enumeration {
   type Role = Value
-  val EventManager, MaintenanceTeam, LogisticsTeam, CateringTeam, DecorationsTeam = Value
+  val EventManager, EntertainmentTeam, LogisticsTeam, CateringTeam, DecorationsTeam = Value
 
   implicit val roleFormat: Format[Role] = Json.formatEnum(this)
 

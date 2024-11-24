@@ -178,7 +178,7 @@ class TaskAssignmentController @Inject()(
     val roles = request.attrs.get(RequestKeys.Roles).getOrElse(Seq.empty)
 
     taskAssignmentRepository.find(id).flatMap {
-      case Some((taskAssignment, _, serviceTeam, _)) =>
+      case Some((taskAssignment, taskTemplate, serviceTeam, eventPlan)) =>
         (if (roles.contains(Role.EventManager))
           Future.successful(true)
         else
@@ -186,7 +186,9 @@ class TaskAssignmentController @Inject()(
           case true =>
             val response = Json.obj(
               "task_assignment" -> Json.toJson(taskAssignment),
-              "service_team" -> Json.toJson(serviceTeam)
+              "task_template" -> Json.toJson(taskTemplate),
+              "service_team" -> Json.toJson(serviceTeam),
+              "event_plan" -> Json.toJson(eventPlan)
             )
             Ok(response)
           case false => Forbidden("Access denied")

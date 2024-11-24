@@ -54,27 +54,30 @@ class ServiceTeamController @Inject()(
     val userRoles = request.attrs.get(RequestKeys.Roles).getOrElse(Seq.empty)
     println(userRoles)
 
-    if (!userRoles.contains(Role.EventManager)) {
+    /*if (!userRoles.contains(Role.EventManager)) {
       Future.successful(Forbidden("Access denied"))
-    } else {
+    } else {*/
       serviceTeamRepository.list().map { serviceTeams =>
         Ok(Json.toJson(serviceTeams))
       }
-    }
+    //}
   }
 
   // View a specific Service Team by ID - GET
   def getServiceTeam(id: Long) = Action.async { request =>
-    val userRoles = request.attrs.get(RequestKeys.Roles).getOrElse(Seq.empty)
+    //val userRoles = request.attrs.get(RequestKeys.Roles).getOrElse(Seq.empty)
 
     serviceTeamRepository.find(id).flatMap {
       case Some(serviceTeam) =>
-        val role = getRole(serviceTeam.name)
-        if (userRoles.contains(Role.EventManager) || userRoles.contains(role)) {
+        //val role = getRole(serviceTeam.name)
+//        println(s"Role is ${role}")
+//        println(s"userRoles is ${userRoles}")
+//        println(s"${userRoles.contains(role)}")
+        //if (userRoles.contains(Role.EventManager) || userRoles.contains(role)) {
           Future.successful(Ok(Json.toJson(serviceTeam)))
-        } else {
-          Future.successful(Forbidden("Access denied"))
-        }
+        //} else {
+          //Future.successful(Forbidden("Access denied"))
+        //}
       case None =>
         Future.successful(NotFound(Json.obj("error" -> s"Service team with ID $id not found")))
     }
