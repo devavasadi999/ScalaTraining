@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useParams, useLocation } from 'react-router-dom';
 import {
     Box,
@@ -29,7 +28,17 @@ const TaskDetails = () => {
     // Fetch Task Details
     const fetchTaskDetails = async () => {
         try {
-            const response = await api.get(`/task-assignments/${id}`);
+            const token = localStorage.getItem('token'); // Retrieve token from localStorage
+            if (!token) {
+                console.error('No token found. User might not be logged in.');
+                return;
+            }
+
+            const response = await api.get(`/task-assignments/${id}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`, // Include Authorization header
+                },
+            });
             const data = response.data;
             setTaskDetails({
                 taskAssignment: data.task_assignment,
@@ -46,7 +55,17 @@ const TaskDetails = () => {
     // Fetch Task Issues
     const fetchTaskIssues = async () => {
         try {
-            const response = await api.get(`/taskIssues/taskAssignment/${id}`);
+            const token = localStorage.getItem('token'); // Retrieve token from localStorage
+            if (!token) {
+                console.error('No token found. User might not be logged in.');
+                return;
+            }
+
+            const response = await api.get(`/taskIssues/taskAssignment/${id}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`, // Include Authorization header
+                },
+            });
             setIssues(response.data.map((issue) => issue.task_issue));
         } catch (error) {
             console.error('Error fetching task issues:', error);
@@ -61,7 +80,17 @@ const TaskDetails = () => {
     // Handle Issue Resolution
     const handleResolveIssue = async (issueId) => {
         try {
-            await api.patch(`/taskIssues/${issueId}`, { status: 'Resolved' });
+            const token = localStorage.getItem('token'); // Retrieve token from localStorage
+            if (!token) {
+                console.error('No token found. User might not be logged in.');
+                return;
+            }
+
+            await api.patch(`/taskIssues/${issueId}`, { status: 'Resolved' }, {
+                headers: {
+                    Authorization: `Bearer ${token}`, // Include Authorization header
+                },
+            });
             fetchTaskIssues(); // Refresh issues after resolving
         } catch (error) {
             console.error('Error resolving issue:', error);
@@ -71,7 +100,17 @@ const TaskDetails = () => {
     // Handle Status Change
     const handleStatusChange = async (newStatus) => {
         try {
-            await api.patch(`/task-assignments/${id}`, { status: newStatus });
+            const token = localStorage.getItem('token'); // Retrieve token from localStorage
+            if (!token) {
+                console.error('No token found. User might not be logged in.');
+                return;
+            }
+
+            await api.patch(`/task-assignments/${id}`, { status: newStatus }, {
+                headers: {
+                    Authorization: `Bearer ${token}`, // Include Authorization header
+                },
+            });
             setStatus(newStatus);
             fetchTaskDetails(); // Refresh task details
         } catch (error) {
@@ -102,16 +141,19 @@ const TaskDetails = () => {
                         <strong>Service Team:</strong> {taskDetails.serviceTeam.name}
                     </Typography>
                     <Typography variant="body1">
-                        <strong>Start Time:</strong> {taskDetails.taskAssignment.start_time}
+                        <strong>Start Time:</strong>{' '}
+                        {new Date(taskDetails.taskAssignment.start_time).toLocaleString()}
                     </Typography>
                     <Typography variant="body1">
-                        <strong>End Time:</strong> {taskDetails.taskAssignment.end_time}
+                        <strong>End Time:</strong>{' '}
+                        {new Date(taskDetails.taskAssignment.end_time).toLocaleString()}
                     </Typography>
                     <Typography variant="body1">
                         <strong>Expectations:</strong> {taskDetails.taskAssignment.expectations || 'N/A'}
                     </Typography>
                     <Typography variant="body1">
-                        <strong>Special Requirements:</strong> {taskDetails.taskAssignment.special_requirements || 'N/A'}
+                        <strong>Special Requirements:</strong>{' '}
+                        {taskDetails.taskAssignment.special_requirements || 'N/A'}
                     </Typography>
                     <Typography variant="body1">
                         <strong>Status:</strong> {status}

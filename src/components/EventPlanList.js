@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import {
     Box,
     Typography,
@@ -14,10 +13,20 @@ import api from '../api';
 const EventPlanList = () => {
     const [eventPlans, setEventPlans] = useState([]);
 
-    // Fetch event plans from the backend
+    // Fetch event plans from the backend with authorization header
     const fetchEventPlans = async () => {
         try {
-            const response = await api.get('/event-plans');
+            const token = localStorage.getItem('token'); // Retrieve token from localStorage
+            if (!token) {
+                console.error('No token found. User might not be logged in.');
+                return;
+            }
+
+            const response = await api.get('/event-plans', {
+                headers: {
+                    Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+                },
+            });
             setEventPlans(response.data || []);
         } catch (error) {
             console.error('Error fetching event plans:', error);

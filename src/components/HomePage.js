@@ -1,14 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { Box, Button, Typography, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import {
+    Box,
+    Button,
+    Typography,
+    TextField,
+    Select,
+    MenuItem,
+    FormControl,
+    InputLabel,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle
+} from '@mui/material';
 import api from '../api';
 
 const HomePage = () => {
     const navigate = useNavigate();
     const [serviceTeams, setServiceTeams] = useState([]);
     const [selectedServiceTeam, setSelectedServiceTeam] = useState('');
+    const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [loginFor, setLoginFor] = useState(''); // 'eventManager' or 'serviceTeam'
 
+    // Fetch service teams on component mount
     useEffect(() => {
         const fetchServiceTeams = async () => {
             try {
@@ -22,10 +39,34 @@ const HomePage = () => {
         fetchServiceTeams();
     }, []);
 
-    const handleServiceTeamLogin = () => {
-        if (selectedServiceTeam) {
-            navigate(`/service-team-tasks?serviceTeamId=${selectedServiceTeam}`);
+    // Handle user login
+    const handleLogin = async () => {
+        try {
+            const response = await api.post('/login', { username, password });
+            const { token } = response.data;
+
+            // Store token in localStorage
+            localStorage.setItem('token', token);
+
+            if (loginFor === 'eventManager') {
+                navigate('/event-plans');
+            } else if (loginFor === 'serviceTeam' && selectedServiceTeam) {
+                navigate(`/service-team-tasks?serviceTeamId=${selectedServiceTeam}`);
+            } else {
+                console.error('Invalid login role or missing service team selection');
+            }
+
+            // Close dialog
+            setIsLoginDialogOpen(false);
+        } catch (error) {
+            console.error('Login failed:', error);
         }
+    };
+
+    // Open login dialog for the specified role
+    const openLoginDialog = (loginType) => {
+        setLoginFor(loginType);
+        setIsLoginDialogOpen(true);
     };
 
     return (
@@ -37,7 +78,7 @@ const HomePage = () => {
                 variant="contained"
                 color="primary"
                 sx={{ marginBottom: 4 }}
-                onClick={() => navigate('/event-plans')}
+                onClick={() => openLoginDialog('eventManager')}
             >
                 Login as Event Manager
             </Button>
@@ -59,12 +100,42 @@ const HomePage = () => {
                 <Button
                     variant="contained"
                     color="primary"
-                    onClick={handleServiceTeamLogin}
+                    onClick={() => openLoginDialog('serviceTeam')}
                     disabled={!selectedServiceTeam}
                 >
                     Login as Service Team
                 </Button>
             </Box>
+
+            {/* Login Dialog */}
+            <Dialog open={isLoginDialogOpen} onClose={() => setIsLoginDialogOpen(false)}>
+                <DialogTitle>Login</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        fullWidth
+                        margin="normal"
+                        label="Username"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                    />
+                    <TextField
+                        fullWidth
+                        margin="normal"
+                        label="Password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setIsLoginDialogOpen(false)} color="secondary">
+                        Cancel
+                    </Button>
+                    <Button onClick={handleLogin} color="primary">
+                        Login
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };

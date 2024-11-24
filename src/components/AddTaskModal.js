@@ -1,6 +1,4 @@
-// AddTaskModal.js
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import {
     Modal,
     Box,
@@ -26,7 +24,17 @@ const AddTaskModal = ({ open, onClose, onSuccess, eventPlanId }) => {
 
     const fetchServiceTeams = async () => {
         try {
-            const response = await api.get('/serviceTeams');
+            const token = localStorage.getItem('token'); // Retrieve token from localStorage
+            if (!token) {
+                console.error('No token found. User might not be logged in.');
+                return;
+            }
+
+            const response = await api.get('/serviceTeams', {
+                headers: {
+                    Authorization: `Bearer ${token}`, // Include Authorization header
+                },
+            });
             setServiceTeams(response.data);
         } catch (error) {
             console.error('Error fetching service teams:', error);
@@ -35,7 +43,17 @@ const AddTaskModal = ({ open, onClose, onSuccess, eventPlanId }) => {
 
     const fetchTaskTemplates = async (serviceTeamId) => {
         try {
-            const response = await api.get(`/taskTemplates/serviceTeam/${serviceTeamId}`);
+            const token = localStorage.getItem('token'); // Retrieve token from localStorage
+            if (!token) {
+                console.error('No token found. User might not be logged in.');
+                return;
+            }
+
+            const response = await api.get(`/taskTemplates/serviceTeam/${serviceTeamId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`, // Include Authorization header
+                },
+            });
             setTaskTemplates(response.data);
         } catch (error) {
             console.error('Error fetching task templates:', error);
@@ -54,6 +72,12 @@ const AddTaskModal = ({ open, onClose, onSuccess, eventPlanId }) => {
 
     const handleSubmit = async () => {
         try {
+            const token = localStorage.getItem('token'); // Retrieve token from localStorage
+            if (!token) {
+                console.error('No token found. User might not be logged in.');
+                return;
+            }
+
             // Helper function to format datetime-local input into YYYY-MM-DDTHH:mm:ss
             const formatDateTime = (dateTime) => {
                 const date = new Date(dateTime);
@@ -77,7 +101,10 @@ const AddTaskModal = ({ open, onClose, onSuccess, eventPlanId }) => {
             };
 
             const response = await api.post('/task-assignments', payload, {
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`, // Include Authorization header
+                },
             });
 
             if (response.status === 201) {

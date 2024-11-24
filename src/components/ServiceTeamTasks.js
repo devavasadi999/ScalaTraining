@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { Box, Typography, Grid, Card, CardContent, Button } from '@mui/material';
 import api from '../api';
 
@@ -14,7 +13,17 @@ const ServiceTeamTasks = () => {
     useEffect(() => {
         const fetchServiceTeam = async () => {
             try {
-                const response = await api.get(`/serviceTeams/${serviceTeamId}`);
+                const token = localStorage.getItem('token'); // Retrieve token from localStorage
+                if (!token) {
+                    console.error('No token found. User might not be logged in.');
+                    return;
+                }
+
+                const response = await api.get(`/serviceTeams/${serviceTeamId}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`, // Include Authorization header
+                    },
+                });
                 setServiceTeamName(response.data.name);
             } catch (error) {
                 console.error('Error fetching service team details:', error);
@@ -23,9 +32,17 @@ const ServiceTeamTasks = () => {
 
         const fetchTasks = async () => {
             try {
-                const response = await api.get(
-                    `/task-assignments/service-team/${serviceTeamId}`
-                );
+                const token = localStorage.getItem('token'); // Retrieve token from localStorage
+                if (!token) {
+                    console.error('No token found. User might not be logged in.');
+                    return;
+                }
+
+                const response = await api.get(`/task-assignments/service-team/${serviceTeamId}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`, // Include Authorization header
+                    },
+                });
                 setTasks(response.data);
             } catch (error) {
                 console.error('Error fetching service team tasks:', error);
@@ -52,10 +69,12 @@ const ServiceTeamTasks = () => {
                                         <strong>Event Plan:</strong> {task.event_plan.name}
                                     </Typography>
                                     <Typography variant="body2">
-                                        <strong>Start Time:</strong> {task.task_assignment.start_time}
+                                        <strong>Start Time:</strong>{' '}
+                                        {new Date(task.task_assignment.start_time).toLocaleString()}
                                     </Typography>
                                     <Typography variant="body2">
-                                        <strong>End Time:</strong> {task.task_assignment.end_time}
+                                        <strong>End Time:</strong>{' '}
+                                        {new Date(task.task_assignment.end_time).toLocaleString()}
                                     </Typography>
                                     <Button
                                         variant="contained"

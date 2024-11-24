@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TextField, Button, Box, Typography, MenuItem } from '@mui/material';
-import axios from 'axios';
 import api from '../api';
 
 const eventTypes = ['Wedding', 'CorporateEvent', 'Birthday'];
@@ -28,8 +27,17 @@ const EventPlanForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            const token = localStorage.getItem('token'); // Retrieve the token from localStorage
+            if (!token) {
+                console.error('No token found. User might not be logged in.');
+                return;
+            }
+
             const response = await api.post('/event-plans', formData, {
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`, // Include Authorization header
+                },
             });
 
             if (response.data && response.data.id) {

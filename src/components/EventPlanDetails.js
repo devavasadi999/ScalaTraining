@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import AddTaskModal from './AddTaskModal';
 import { Box, Typography, Button, Grid, Card, CardContent } from '@mui/material';
@@ -12,18 +11,40 @@ const EventPlanDetails = () => {
     const [tasks, setTasks] = useState([]);
     const [showAddTaskModal, setShowAddTaskModal] = useState(false);
 
+    // Fetch the event plan details
     const fetchEventPlan = async () => {
         try {
-            const response = await api.get(`/event-plans/${id}`);
+            const token = localStorage.getItem('token'); // Retrieve token from localStorage
+            if (!token) {
+                console.error('No token found. User might not be logged in.');
+                return;
+            }
+
+            const response = await api.get(`/event-plans/${id}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`, // Include Authorization header
+                },
+            });
             setEventPlan(response.data.eventPlan);
         } catch (error) {
             console.error('Error fetching event plan:', error);
         }
     };
 
+    // Fetch the tasks associated with the event plan
     const fetchTasks = async () => {
         try {
-            const response = await api.get(`/task-assignments/event-plan/${id}`);
+            const token = localStorage.getItem('token'); // Retrieve token from localStorage
+            if (!token) {
+                console.error('No token found. User might not be logged in.');
+                return;
+            }
+
+            const response = await api.get(`/task-assignments/event-plan/${id}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`, // Include Authorization header
+                },
+            });
             setTasks(response.data);
         } catch (error) {
             console.error('Error fetching tasks:', error);
@@ -32,7 +53,7 @@ const EventPlanDetails = () => {
 
     const handleAddTaskSuccess = () => {
         setShowAddTaskModal(false);
-        fetchTasks();
+        fetchTasks(); // Refresh tasks after adding a new one
     };
 
     useEffect(() => {
