@@ -17,7 +17,8 @@ libraryDependencies ++= Seq(
   "joda-time" % "joda-time" % "2.10.10", // Use the latest version
    "org.apache.spark" %% "spark-streaming" % sparkVersion,
    "org.apache.spark" %% "spark-streaming-kafka-0-10" % sparkVersion,
-   "org.apache.spark" %% "spark-sql-kafka-0-10" % sparkVersion  // Kafka integration for Spark SQL
+   "org.apache.spark" %% "spark-sql-kafka-0-10" % sparkVersion,  // Kafka integration for Spark SQL
+  "com.google.cloud.bigdataoss" % "gcs-connector" % "hadoop3-2.2.5",
 )
 
 
