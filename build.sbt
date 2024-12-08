@@ -1,18 +1,22 @@
-ThisBuild / scalaVersion := "2.13.15"
+import scala.collection.immutable.Seq
+
 ThisBuild / version := "0.1.0-SNAPSHOT"
 
-lazy val root = (project in file("."))
-  .settings(
-    name := "kafka-protobuf-scala",
-    resolvers ++= Seq(
-      "Akka Repository" at "https://repo.akka.io/maven/",
-      "Confluent" at "https://packages.confluent.io/maven/"
-    ),
-    libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-actor" % "2.6.20",
-      "com.typesafe.akka" %% "akka-stream" % "2.6.20",
-      "com.typesafe.akka" %% "akka-stream-kafka" % "2.1.0",
-      "io.confluent" % "kafka-protobuf-serializer" % "7.7.1",
-      "com.thesamet.scalapb" %% "scalapb-runtime" % "0.11.6" // Needed for runtime
-    )
-  )
+
+scalaVersion := "2.12.10" // Spark 3.2.x supports Scala 2.12.x
+
+// Define Spark version that has better compatibility with newer Java versions
+val sparkVersion = "3.2.1"
+
+libraryDependencies ++= Seq(
+  "org.apache.spark" %% "spark-core" % sparkVersion,
+  "org.apache.spark" %% "spark-sql" % sparkVersion,
+  "org.scalatest" %% "scalatest" % "3.2.2" % "test",
+  "com.datastax.spark" %% "spark-cassandra-connector" % "3.0.1",
+  "com.github.jnr" % "jnr-posix" % "3.1.7",
+  "joda-time" % "joda-time" % "2.10.10", // Use the latest version
+  "org.apache.spark" %% "spark-streaming" % sparkVersion,
+  "org.apache.spark" %% "spark-streaming-kafka-0-10" % sparkVersion,
+  "org.apache.spark" %% "spark-sql-kafka-0-10" % sparkVersion,  // Kafka integration for Spark SQL
+  "com.google.cloud.bigdataoss" % "gcs-connector" % "hadoop3-2.2.5",
+)

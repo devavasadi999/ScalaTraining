@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/kafka-protobuf-scala.iml" filepath="$PROJECT_DIR$/.idea/modules/kafka-protobuf-scala.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/kafka-protobuf-scala-build.iml" filepath="$PROJECT_DIR$/.idea/modules/kafka-protobuf-scala-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/protobuf-scala.iml" filepath="$PROJECT_DIR$/.idea/modules/protobuf-scala.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/protobuf-scala.protobuf-scala-build.iml" filepath="$PROJECT_DIR$/.idea/modules/protobuf-scala.protobuf-scala-build.iml" />
     </modules>
   </component>
 </project>
