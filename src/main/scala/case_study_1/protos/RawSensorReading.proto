@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package case_study_1;
+
+// Represents raw sensor readings
+message RawSensorReading {
+  string sensorId = 1;      // Unique identifier for the sensor
+  int64 timestamp = 2;      // Epoch timestamp of the reading
+  float temperature = 3;    // Temperature value
+  float humidity = 4;       // Humidity value
+}

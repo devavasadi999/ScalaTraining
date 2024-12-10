@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package case_study_4.DynamicData;
+
+// Represents a sales record
+message SalesRecord {
+  string store = 1;
+  string dept = 2;
+  string date = 3;
+  float weekly_sales = 4;
+  bool is_holiday = 5;
+}
