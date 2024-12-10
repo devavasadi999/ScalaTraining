@@ -16,3 +16,10 @@ It contains the following:
 6) Week3ProjectsDocumentation file contains screenshots of working postman requests, notification emails printed on application terminal, UI screenshots and email screenshots.
 7) Flow, Model and PPTs of both the projects.
 8) Aligned Participant Teja's projects.
+
+---
+*** Final Project Case Studies ***
+
+Folder named FinalProjectCaseStudies contains:
+1) Folder named case_study_4 - Contains code for Case Study 4 - Data_Processing_Optimizing.
+2) File named Final_Project_Case_Study_4 - Contains screenshot documentation of the entire flow related to Case Study 4.
