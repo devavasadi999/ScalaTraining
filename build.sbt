@@ -17,6 +17,9 @@ val akkaKafkaVersion = "2.1.0"
 // Define ScalaPB version
 val scalaPBVersion = "0.11.12"
 
+// Define Akka HTTP version
+val akkaHttpVersion = "10.2.10"
+
 libraryDependencies ++= Seq(
   // Spark dependencies
   "org.apache.spark" %% "spark-core" % sparkVersion,
@@ -30,6 +33,15 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % akkaVersion,
   "com.typesafe.akka" %% "akka-stream" % akkaVersion,
   "com.typesafe.akka" %% "akka-stream-kafka" % akkaKafkaVersion,
+
+  // Akka HTTP dependency
+  "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
+
+  // Akka HTTP testkit dependency
+  "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % Test,
+
+  // Add Akka TestKit dependency
+  "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
 
   // Kafka dependencies
   "org.apache.kafka" % "kafka-clients" % "3.4.0",
@@ -49,7 +61,13 @@ libraryDependencies ++= Seq(
   "com.datastax.spark" %% "spark-cassandra-connector" % "3.0.1",
   "com.github.jnr" % "jnr-posix" % "3.1.7",
   "joda-time" % "joda-time" % "2.12.5", // Updated version
-  "com.google.cloud.bigdataoss" % "gcs-connector" % "hadoop3-2.2.5"
+  "com.google.cloud.bigdataoss" % "gcs-connector" % "hadoop3-2.2.5",
+
+  // CORS dependency
+  "ch.megard" %% "akka-http-cors" % "1.1.3",
+
+  // Spray JSON dependency
+  "io.spray" %% "spray-json" % "1.3.6"
 )
 
 dependencyOverrides ++= Seq(

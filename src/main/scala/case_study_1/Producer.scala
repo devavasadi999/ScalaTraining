@@ -38,9 +38,10 @@ object SensorReadingProducer extends App {
 //      buildRecord()
 //    }
 
+  val timestamp = System.currentTimeMillis()
   val sensorReadings = Source(1 to 5)
-    .map { _ =>
-      buildRecord()
+    .map { i =>
+      buildRecord(timestamp + i*100)
     }
 
   // Stream records to Kafka
@@ -51,9 +52,9 @@ object SensorReadingProducer extends App {
       system.terminate()
     }
 
-  def buildRecord(): ProducerRecord[String, Array[Byte]] = {
+  def buildRecord(timestamp: Long): ProducerRecord[String, Array[Byte]] = {
     val sensorId = s"Sensor-${scala.util.Random.nextInt(100) + 1}" // Random sensor ID
-    val timestamp = System.currentTimeMillis()                    // Current timestamp
+    //val timestamp = System.currentTimeMillis()                    // Current timestamp
     val temperature = -50 + scala.util.Random.nextFloat() * 200   // Temperature between -50 and 150
     val humidity = scala.util.Random.nextFloat() * 100            // Humidity between 0 and 100
 
