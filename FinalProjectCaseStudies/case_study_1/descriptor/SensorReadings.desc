@@ -1,0 +1,19 @@
+
+»
+RawSensorReading.protocase_study_1"Š
+RawSensorReading
+sensorId (	RsensorId
+	timestamp (R	timestamp 
+temperature (Rtemperature
+humidity (Rhumiditybproto3
+é
+AggregatedSensorMetrics.protocase_study_1"±
+AggregatedSensorMetrics
+sensorId (	RsensorId&
+avgTemperature (RavgTemperature 
+avgHumidity (RavgHumidity&
+minTemperature (RminTemperature&
+maxTemperature (RmaxTemperature 
+minHumidity (RminHumidity 
+maxHumidity (RmaxHumidity
+	dataCount (R	dataCountbproto3

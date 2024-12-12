@@ -1,0 +1,11 @@
+logs
+target
+/.bsp
+/.idea
+/public
+/test
+/.idea_modules
+/.classpath
+/project
+/.settings
+/RUNNING_PID

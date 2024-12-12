@@ -21,5 +21,7 @@ It contains the following:
 *** Final Project Case Studies ***
 
 Folder named FinalProjectCaseStudies contains:
-1) Folder named case_study_4 - Contains code for Case Study 4 - Data_Processing_Optimizing.
-2) File named Final_Project_Case_Study_4 - Contains screenshot documentation of the entire flow related to Case Study 4.
+1) Folder named case_study_4 - Contains code for Case Study 4 - Data Processing Optimizing.
+2) File named Case_Study_4_Documentation - Contains screenshot documentation of the entire flow related to Case Study 4.
+3) Folder named case_study_1 - Contains code for Case Study 1 - IOT Data Processing.
+4) File named Case_Study_1_Documentation - Contains screenshot documentation of the entire flow related to Case Study 1.

@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package case_study_1;
+
+// Represents aggregated sensor metrics
+message AggregatedSensorMetrics {
+  string sensorId = 1;           // Unique identifier for the sensor
+  float avgTemperature = 2;      // Average temperature
+  float avgHumidity = 3;         // Average humidity
+  float minTemperature = 4;      // Minimum temperature
+  float maxTemperature = 5;      // Maximum temperature
+  float minHumidity = 6;         // Minimum humidity
+  float maxHumidity = 7;         // Maximum humidity
+  int32 dataCount = 8;        // Count of data points which were combined in the aggregate
+}
