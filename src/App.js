@@ -1,24 +1,47 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect } from "react";
+import MetricsTable from "./components/MetricsTable";
+import SearchBar from "./components/SearchBar";
+import RefreshButton from "./components/RefreshButton";
+import { Container, Typography } from "@mui/material";
 
 function App() {
+  const [metrics, setMetrics] = useState([]);
+  const [filteredMetrics, setFilteredMetrics] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const fetchMetrics = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/api/aggregated-data");
+      const data = await response.json();
+      setMetrics(data);
+      setFilteredMetrics(data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  const handleSearch = (term) => {
+    setSearchTerm(term);
+    if (term) {
+      setFilteredMetrics(metrics.filter((metric) => metric.sensorId.includes(term)));
+    } else {
+      setFilteredMetrics(metrics);
+    }
+  };
+
+  useEffect(() => {
+    fetchMetrics();
+  }, []);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Container maxWidth="lg" style={{ marginTop: "20px" }}>
+      <Typography variant="h4" gutterBottom>
+        Sensor Readings Aggregated Metrics
+      </Typography>
+      <SearchBar searchTerm={searchTerm} onSearch={handleSearch} />
+      <RefreshButton onRefresh={fetchMetrics} />
+      <MetricsTable metrics={filteredMetrics} />
+    </Container>
   );
 }
 
