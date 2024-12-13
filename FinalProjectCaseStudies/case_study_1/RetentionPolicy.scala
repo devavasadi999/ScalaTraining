@@ -4,9 +4,26 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
+import akka.actor.ActorSystem
+import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.duration._
+
 object RetentionPolicy {
 
   def main(args: Array[String]): Unit = {
+    // Initialize Akka system
+    implicit val system: ActorSystem = ActorSystem("RetentionPolicyScheduler")
+    implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+
+    // Schedule the task to run every 7 days
+    val interval = 7.days
+    val initialDelay = 0.seconds
+    system.scheduler.scheduleWithFixedDelay(initialDelay, interval) { () =>
+      runRetentionPolicy()
+    }
+  }
+
+  def runRetentionPolicy(): Unit = {
     // Initialize SparkSession
     val spark = SparkSession.builder()
       .appName("RetentionPolicy")

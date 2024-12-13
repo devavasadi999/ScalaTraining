@@ -114,7 +114,7 @@ object SensorDataAggregation {
   }
 
   def computeNewAggregatedMetrics(newRawDataBatch: DataFrame, existingAggregatedData: DataFrame): DataFrame = {
-    val dataToBeSaved = if (existingAggregatedData != null) {
+    val combinedAggregatedData = if (existingAggregatedData != null) {
       val newAggregatedData = newRawDataBatch.groupBy("sensorId")
         .agg(
           avg("temperature").alias("avgTemperature_new"),
@@ -159,7 +159,7 @@ object SensorDataAggregation {
         )
     }
 
-    dataToBeSaved
+    combinedAggregatedData
   }
 
   // Function to perform incremental aggregation for the current hour
@@ -191,19 +191,19 @@ object SensorDataAggregation {
     }
 
     // Perform incremental aggregation
-    // Cache the new aggregated metrics to optimize downstream operations
-    val newAggregatedMetrics = computeNewAggregatedMetrics(newRawDataBatch, existingAggregatedData).cache()
-    newAggregatedMetrics.show()
+    // Cache the combined aggregated metrics to optimize downstream operations
+    val combinedAggregatedMetrics = computeNewAggregatedMetrics(newRawDataBatch, existingAggregatedData).cache()
+    combinedAggregatedMetrics.show()
 
-    // Save the new aggregated metrics
-    storeAggregatedMetrics(newAggregatedMetrics, currentHourAggregatedDataFolder, jsonAggregatedDataPath)
+    // Save the combined aggregated metrics
+    storeAggregatedMetrics(combinedAggregatedMetrics, currentHourAggregatedDataFolder, jsonAggregatedDataPath)
   }
 
-  def storeAggregatedMetrics(newAggregatedMetrics: DataFrame, currentHourAggregatedDataFolder: String, jsonAggregatedDataPath: String): Unit = {
+  def storeAggregatedMetrics(combinedAggregatedMetrics: DataFrame, currentHourAggregatedDataFolder: String, jsonAggregatedDataPath: String): Unit = {
     // Serialize updated aggregated data back to Protobuf
-    val serializedAggregatedData = newAggregatedMetrics.withColumn(
+    val serializedAggregatedData = combinedAggregatedMetrics.withColumn(
       "value",
-      to_protobuf(struct(newAggregatedMetrics.columns.map(col): _*), aggregatedDataMessageType, descriptorFile)
+      to_protobuf(struct(combinedAggregatedMetrics.columns.map(col): _*), aggregatedDataMessageType, descriptorFile)
     ).select("value")
 
     // Write updated aggregated data to GCS
@@ -213,7 +213,7 @@ object SensorDataAggregation {
       .save(currentHourAggregatedDataFolder)
 
     // Write JSON representation for dashboard consumption
-    newAggregatedMetrics.write
+    combinedAggregatedMetrics.write
       .mode(SaveMode.Overwrite)
       .json(jsonAggregatedDataPath)
   }
