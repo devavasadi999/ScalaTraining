@@ -6,16 +6,22 @@ import org.apache.spark.sql.SaveMode
 import org.apache.spark.storage.StorageLevel
 
 object StaticDataProcessing {
+  // Initialize SparkSession with GCS configurations
+  val spark = SparkSession.builder()
+    .appName("Static Data Processing")
+    .config("spark.hadoop.fs.gs.impl", "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem")
+    .config("spark.hadoop.fs.AbstractFileSystem.gs.impl", "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFS")
+    .config("spark.hadoop.google.cloud.auth.service.account.enable", "true")
+    .config("spark.hadoop.google.cloud.auth.service.account.json.keyfile", "/Users/devavasadi/Documents/gcp-final-key.json")
+    .master("local[*]")
+    .getOrCreate()
+
+  import spark.implicits._
+
   def main(args: Array[String]): Unit = {
-    // Initialize SparkSession with GCS configurations
-    val spark = SparkSession.builder()
-      .appName("Static Data Processing")
-      .config("spark.hadoop.fs.gs.impl", "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem")
-      .config("spark.hadoop.fs.AbstractFileSystem.gs.impl", "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFS")
-      .config("spark.hadoop.google.cloud.auth.service.account.enable", "true")
-      .config("spark.hadoop.google.cloud.auth.service.account.json.keyfile", "/Users/devavasadi/Documents/gcp-final-key.json")
-      .master("local[*]")
-      .getOrCreate()
+
+    // Set log level to WARN to reduce logging verbosity
+    spark.sparkContext.setLogLevel("WARN")
 
     val bucketName = "deva_vasadi"
     val featuresPath = s"gs://$bucketName/final_project/case_study_4/features.csv"
@@ -48,7 +54,7 @@ object StaticDataProcessing {
 
     //Filter out records	where	Weekly_Sales	is	negative.
     // Data validation: Drop rows with missing or invalid values in critical columns
-    val validatedTrainDF = trainDF.filter("Weekly_Sales >= 0").na.drop("any", Seq("Store", "Dept", "Weekly_Sales", "Date"))
+    val validatedTrainDF = trainDF.filter($"Weekly_Sales" >= 0).na.drop("any", Seq("Store", "Dept", "Weekly_Sales", "Date"))
 
     // Validate critical columns for featuresDF and storesDF
     val validatedFeaturesDF = featuresDF.na.drop("any", Seq("Store", "Date"))
@@ -65,7 +71,7 @@ object StaticDataProcessing {
       .join(broadcastedStoresDF, Seq("Store"), "left")
 
     // Show enriched data for verification
-    //enrichedDF.show(10)
+    enrichedDF.show(10)
 
     // Partitioned Storage in Parquet Format
     val partitionedParquetPath = s"gs://$bucketName/final_project/case_study_4/enriched_data"
@@ -74,8 +80,10 @@ object StaticDataProcessing {
       .repartition(col("Store"), col("Date")) // Partition by Store and Date
       .cache() // Cache for reuse in downstream processes
 
+    partitionedEnrichedDF.show(10)
+
     // Write partitioned data to Parquet format
-    partitionedEnrichedDF.limit(1000).write
+    partitionedEnrichedDF.write
       .mode(SaveMode.Overwrite)
       .partitionBy("Store", "Date") // Physically partition the data
       .parquet(partitionedParquetPath)
@@ -93,10 +101,9 @@ object StaticDataProcessing {
     val storeMetrics = partitionedEnrichedDF.groupBy("Store")
       .agg(
         sum("Weekly_Sales").alias("Total_Weekly_Sales"),
-        avg("Weekly_Sales").alias("Average_Weekly_Sales")
+        avg("Weekly_Sales").alias("Average_Weekly_Sales"),
+        count("Store").alias("Data_Count")
       )
-      .orderBy(desc("Total_Weekly_Sales"))
-    println(storeMetrics.count())
 
     // Cache store-level metrics for reuse, MEMORY ONLY will be sufficient for small datasets (45 rows)
     val cachedStoreMetrics = storeMetrics.persist(StorageLevel.MEMORY_ONLY)
@@ -110,17 +117,17 @@ object StaticDataProcessing {
       .json(storeWiseAggregatedMetricsPath)
 
     // Top-Performing Stores (assuming "performance" is based on total weekly sales)
-    val topStores = cachedStoreMetrics.limit(5)
+    val topStores = cachedStoreMetrics.orderBy(desc("Total_Weekly_Sales")).limit(5)
     println("Top-Performing Stores:")
     topStores.show()
 
     // Department-Level Metrics
     val departmentMetrics = partitionedEnrichedDF.groupBy("Store", "Dept")
       .agg(
-        sum("Weekly_Sales").alias("Total_Sales"),
-        avg("Weekly_Sales").alias("Average_Sales")
+        sum("Weekly_Sales").alias("Total_Weekly_Sales"),
+        avg("Weekly_Sales").alias("Average_Weekly_Sales"),
+        count("Store").alias("Data_Count")
       )
-    println(departmentMetrics.count())
 
     // Cache department-level metrics for reuse
     val cachedDepartmentMetrics = departmentMetrics.persist(StorageLevel.MEMORY_AND_DISK_SER)
@@ -160,8 +167,7 @@ object StaticDataProcessing {
       .join(nonHolidaySales, Seq("Store", "Dept"), "outer")
       .orderBy(desc("Holiday_Sales"))
 
-    //holidayComparison.show(10)
-    println(holidayComparison.count())
+    holidayComparison.show(10)
 
     // Department Wise Holiday vs Non-Holiday Sales Comparison Metrics Storage in JSON Format
     val holidayVsNonHolidayMetricsPath = s"gs://deva_vasadi/final_project/case_study_4/aggregated_metrics/holiday_vs_non_holiday"
