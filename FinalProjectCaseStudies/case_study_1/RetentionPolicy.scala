@@ -15,8 +15,8 @@ object RetentionPolicy {
     implicit val system: ActorSystem = ActorSystem("RetentionPolicyScheduler")
     implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
-    // Schedule the task to run every 7 days
-    val interval = 7.days
+    // Schedule the task to run once a day
+    val interval = 1.days
     val initialDelay = 0.seconds
     system.scheduler.scheduleWithFixedDelay(initialDelay, interval) { () =>
       runRetentionPolicy()
